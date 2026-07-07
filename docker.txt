@@ -1,0 +1,44 @@
+Komenda na dockera:
+C:\Users\tomek>docker run --name HOSSA_DB -e POSTGRES_PASSWORD=haslo123 -p 5431:5432 -d postgres
+
+Komendy SQL do stworzenia bazy:
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+DROP TABLE IF EXISTS documents;
+DROP TABLE IF EXISTS status;
+
+CREATE TABLE status (
+    status_id SMALLSERIAL PRIMARY KEY,
+    status TEXT NOT NULL,
+    color TEXT NOT NULL
+);
+
+INSERT INTO status (status, color)
+VALUES
+('brak', '9E9D9B'),
+('w trakcie przygotowania', 'FFA200'),
+('przygotowany', 'A4E805'),
+('zatwierdzony', '05E810'),
+('nie dotyczy', '440373'),
+('wymaga zmian', 'E81033');
+
+CREATE TABLE documents (
+    document_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    status_id SMALLINT NOT NULL DEFAULT 1,
+    doc_name TEXT NOT NULL,
+    extension_ TEXT,
+    absolute_path TEXT,
+    relative_path TEXT UNIQUE,
+    size_ BIGINT,
+    created_at TIMESTAMP,
+    modified_at TIMESTAMP,
+    hash TEXT,
+    source_ TEXT,
+    rola_osoby_odpowiedzialnej TEXT,
+    kto_zatwierdzil TEXT,
+
+    CONSTRAINT fk_documents_status
+        FOREIGN KEY (status_id)
+        REFERENCES status(status_id)
+);
