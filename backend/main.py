@@ -7,6 +7,8 @@ from backend.models import Document, Status
 
 from fastapi.middleware.cors import CORSMiddleware
 
+PATH_SEP = "\\"
+
 app = FastAPI()
 
 app.add_middleware(
@@ -59,7 +61,7 @@ def get_documents(
 def get_projects(db: Session = Depends(get_db)):
     projects = (
         db.query(
-            func.split_part(Document.relative_path, "/", 1).label("project"),
+            func.split_part(Document.relative_path, PATH_SEP, 1).label("project"),
             func.count(Document.document_id).label("count"),
         )
         .group_by("project")
@@ -74,10 +76,10 @@ def get_projects(db: Session = Depends(get_db)):
 def get_folders(project_id: str, db: Session = Depends(get_db)):
     folders = (
         db.query(
-            func.split_part(Document.relative_path, "/", 2).label("folder"),
+            func.split_part(Document.relative_path, PATH_SEP, 2).label("folder"),
             func.count(Document.document_id).label("count"),
         )
-        .filter(func.split_part(Document.relative_path, "/", 1) == project_id)
+        .filter(func.split_part(Document.relative_path, PATH_SEP, 1) == project_id)
         .group_by("folder")
         .order_by("folder")
         .all()
@@ -91,8 +93,8 @@ def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)
     docs = (
         db.query(Document, Status)
         .join(Status, Document.status_id == Status.status_id)
-        .filter(func.split_part(Document.relative_path, "/", 1) == project_id)
-        .filter(func.split_part(Document.relative_path, "/", 2) == folder_id)
+        .filter(func.split_part(Document.relative_path, PATH_SEP, 1) == project_id)
+        .filter(func.split_part(Document.relative_path, PATH_SEP, 2) == folder_id)
         .order_by(Document.doc_name)
         .all()
     )
