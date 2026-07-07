@@ -1,19 +1,13 @@
-from utilities.data_loader import DataLoader
-from db.database import Database
-from db.repository import DocumentRepository
+from synchronizer.data_loader import DataLoader
+from synchronizer.database import Database
+from synchronizer.repository import DocumentRepository
 
 
 folder = r"C:\Users\tomek\Desktop\Dane"
 
 loader = DataLoader(folder)
-
 documents = loader.scan()
-
-print(documents[0])
-
-
 db = Database()
-
 repository = DocumentRepository(db)
 
 

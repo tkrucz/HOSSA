@@ -1,8 +1,7 @@
 from pathlib import Path
-from document import Document
-from document import calculate_hash
+from synchronizer.document import Document
+from synchronizer.document import calculate_hash
 from datetime import datetime
-
 
 class DataLoader:
 

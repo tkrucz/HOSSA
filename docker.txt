@@ -42,3 +42,8 @@ CREATE TABLE documents (
         FOREIGN KEY (status_id)
         REFERENCES status(status_id)
 );
+
+Będąc w folderze HOSSA
+
+Uruchomienie API, terminal 1- uvicorn backend.main:app --reload
+React, terminal 2- cd frontend, npm run dev

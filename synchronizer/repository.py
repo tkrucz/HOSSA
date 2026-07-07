@@ -1,4 +1,4 @@
-from document import Document
+from synchronizer.document import Document
 
 
 class DocumentRepository:
