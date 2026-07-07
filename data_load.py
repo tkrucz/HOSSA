@@ -18,5 +18,3 @@ for document in documents:
 print(
     f"Zapisano {len(documents)} dokumentów"
 )
-
-#  C:\Users\tomek\.local\bin\claude.exe

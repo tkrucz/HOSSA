@@ -3,14 +3,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-DATABASE_URL = (
-    "postgresql://postgres:haslo123@localhost:5431/documents"
-)
+DATABASE_URL = "postgresql://postgres:haslo123@localhost:5431/documents"
 
 
-engine = create_engine(
-    DATABASE_URL
-)
+engine = create_engine(DATABASE_URL)
 
 
 SessionLocal = sessionmaker(
