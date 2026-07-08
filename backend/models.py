@@ -1,13 +1,12 @@
 from sqlalchemy import Column, String, Integer, BigInteger, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from synchronizer.database import engine
 from sqlalchemy.orm import declarative_base
 
 
 Base = declarative_base()
 
-
+# Database model representing available document statuses together with their associated display colors.
 class Status(Base):
     __tablename__ = "status"
 
@@ -16,7 +15,7 @@ class Status(Base):
     color = Column(String)
 
 
-
+# ORM model representing document metadata stored in the database and linked to a document status.
 class Document(Base):
     __tablename__ = "documents"
 
@@ -34,4 +33,6 @@ class Document(Base):
     source_ = Column(String)
     rola_osoby_odpowiedzialnej = Column(String)
     kto_zatwierdzil = Column(String)
+
+    # Establishes the relationship allowing direct access to status information from a document instance.
     status = relationship("Status")

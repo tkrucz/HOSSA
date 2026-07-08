@@ -6,10 +6,11 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from synchronizer.database import SessionLocal
+from backend.database import SessionLocal
 
 from backend.models import Document, Status
 
+# Path separator used to extract project and folder names from the relative document path stored in the database.
 PATH_SEP = "\\"
 
 app = FastAPI()
@@ -21,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# Creates a database session for each request and ensures it is properly closed after the request is completed.
 def get_db():
     db = SessionLocal()
     try:
@@ -29,37 +30,8 @@ def get_db():
     finally:
         db.close()
 
-
-@app.get("/documents")
-def get_documents(
-    db: Session = Depends(get_db)
-):
-
-    result = (
-        db.query(
-            Document,
-            Status
-        )
-        .join(
-            Status,
-            Document.status_id == Status.status_id
-        )
-        .all()
-    )
-
-
-    return [
-        {
-            "document_id": str(doc.document_id),
-            "doc_name": doc.doc_name,
-            "status": status.status,
-            "color": status.color
-        }
-
-        for doc,status in result
-    ]
-
-
+# Returns all available projects by grouping documents based on the first directory in the relative path.
+# Also calculates the number of documents per project.
 @app.get("/projects")
 def get_projects(db: Session = Depends(get_db)):
     projects = (
@@ -74,7 +46,7 @@ def get_projects(db: Session = Depends(get_db)):
 
     return [{"id": p[0], "name": p[0], "count": p[1]} for p in projects]
 
-
+# Retrieves folders belonging to the selected project together with the number of documents in each folder.
 @app.get("/projects/{project_id}/folders")
 def get_folders(project_id: str, db: Session = Depends(get_db)):
     folders = (
@@ -90,7 +62,8 @@ def get_folders(project_id: str, db: Session = Depends(get_db)):
 
     return [{"id": f[0], "name": f[0], "count": f[1]} for f in folders]
 
-
+# Returns all documents for the selected project and folder.
+# Document metadata includes status, color, size, and last modification timestamp for dashboard presentation.
 @app.get("/projects/{project_id}/folders/{folder_id}/documents")
 def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)):
     docs = (
@@ -113,7 +86,7 @@ def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)
         for doc in docs
     ]
 
-
+# Returns all available document statuses used to populate status selection controls.
 @app.get("/statuses")
 def get_statuses(db: Session = Depends(get_db)):
     statuses = db.query(Status).order_by(Status.status_id).all()
@@ -122,7 +95,8 @@ def get_statuses(db: Session = Depends(get_db)):
         {"id": s.status_id, "name": s.status, "color": s.color} for s in statuses
     ]
 
-
+# Retrieves complete metadata for a single document.
+# Returns HTTP 404 if the requested document does not exist.
 @app.get("/documents/{document_id}")
 def get_document(document_id: str, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.document_id == document_id).first()
@@ -148,13 +122,14 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         "kto_zatwierdzil": doc.kto_zatwierdzil,
     }
 
-
+# Defines fields that can be updated through the API.
+# All fields are optional to support partial updates.
 class DocumentUpdate(BaseModel):
     status_id: int | None = None
     rola_osoby_odpowiedzialnej: str | None = None
     kto_zatwierdzil: str | None = None
 
-
+# Updates selected document attributes without replacing the entire record. Only provided fields are modified.
 @app.patch("/documents/{document_id}")
 def update_document(
         document_id: str, payload: DocumentUpdate, db: Session = Depends(get_db)

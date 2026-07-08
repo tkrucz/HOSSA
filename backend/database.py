@@ -5,9 +5,8 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = "postgresql://postgres:haslo123@localhost:5431/documents"
 
-
+# Creates the SQLAlchemy engine used by the backend API.
 engine = create_engine(DATABASE_URL)
-
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -15,6 +14,7 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
+# Provides a low-level PostgreSQL connection used by the synchronization process.
 class Database:
 
     def __init__(

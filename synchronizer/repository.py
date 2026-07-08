@@ -1,6 +1,6 @@
 from synchronizer.document import Document
 
-
+# Handles persistence of scanned documents into the PostgreSQL database.
 class DocumentRepository:
 
 
@@ -57,7 +57,6 @@ class DocumentRepository:
                 document.source
             )
         )
-
 
         self.connection.commit()
 

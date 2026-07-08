@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib
 from uuid import UUID
 
-
+# Represents document metadata collected during filesystem scanning before persistence.
 @dataclass
 class Document:
     name: str
@@ -17,7 +17,7 @@ class Document:
     hash: str
     document_id: UUID | None = None
 
-
+# Computes a SHA-256 checksum for change detection and synchronization purposes.
 def calculate_hash(file_path: Path) -> str:
     sha = hashlib.sha256()
 
