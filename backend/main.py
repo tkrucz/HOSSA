@@ -1,14 +1,16 @@
+import os
+import subprocess
+import sys
+
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
 from pydantic import BaseModel
-
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-
 from backend.models import Document, Status
+from backend.sync import sync_documents
 
 # Path separator used to extract project and folder names from the relative document path stored in the database.
 PATH_SEP = "\\"
@@ -29,6 +31,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Synchronizes the documents which might have changed locally
+@app.post("/sync")
+def sync():
+    try:
+        result = sync_documents()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return result
 
 # Returns all available projects by grouping documents based on the first directory in the relative path.
 # Also calculates the number of documents per project.
@@ -121,6 +133,31 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
         "kto_zatwierdzil": doc.kto_zatwierdzil,
     }
+
+# Opens absolute path with the OS
+@app.post("/documents/{document_id}/open")
+def open_document(document_id: str, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.document_id == document_id).first()
+
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if not doc.absolute_path:
+        raise HTTPException(status_code=400, detail="Document has no absolute path")
+
+    try:
+        if sys.platform == "win32":
+            os.startfile(doc.absolute_path)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", doc.absolute_path], check=True)
+        else:
+            subprocess.run(["xdg-open", doc.absolute_path], check=True)
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500, detail=f"Nie udało się otworzyć pliku: {exc}"
+        )
+
+    return {"opened": True}
 
 # Defines fields that can be updated through the API.
 # All fields are optional to support partial updates.

@@ -65,6 +65,12 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
       .finally(() => setSaving(false));
   };
 
+  const handleOpen = () => {
+    fetch(`${API_URL}/documents/${documentId}/open`, { method: "POST" }).catch(
+      () => setError("Nie udało się otworzyć pliku.")
+    );
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -80,7 +86,11 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
 
             <dl className="modal-details">
               <dt>Ścieżka</dt>
-              <dd>{doc.relative_path}</dd>
+              <dd>
+                <button className="path-link" onClick={handleOpen} type="button">
+                  {doc.relative_path}
+                </button>
+              </dd>
 
               <dt>Rozmiar</dt>
               <dd>
