@@ -90,6 +90,7 @@ def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)
         {
             "id": str(doc.document_id),
             "name": doc.doc_name,
+            "extension": doc.extension_,
             "status": doc.status.status,
             "color": doc.status.color,
             "size": doc.size_,
@@ -168,9 +169,7 @@ class DocumentUpdate(BaseModel):
 
 # Updates selected document attributes without replacing the entire record. Only provided fields are modified.
 @app.patch("/documents/{document_id}")
-def update_document(
-        document_id: str, payload: DocumentUpdate, db: Session = Depends(get_db)
-):
+def update_document(document_id: str, payload: DocumentUpdate, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.document_id == document_id).first()
 
     if doc is None:
@@ -195,4 +194,3 @@ def update_document(
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
         "kto_zatwierdzil": doc.kto_zatwierdzil,
     }
-

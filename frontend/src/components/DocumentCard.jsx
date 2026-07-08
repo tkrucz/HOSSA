@@ -1,3 +1,16 @@
+const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"]);
+const TEXT_EXTENSIONS = new Set([".txt", ".docx", ".doc", ".rtf", ".md"]);
+const SPREADSHEET_EXTENSIONS = new Set([".xlsx", ".xls", ".csv"]);
+
+function getFileIcon(extension) {
+  const ext = (extension || "").toLowerCase();
+
+  if (IMAGE_EXTENSIONS.has(ext)) return "🖼️";
+  if (TEXT_EXTENSIONS.has(ext)) return "📝";
+  if (SPREADSHEET_EXTENSIONS.has(ext)) return "📊";
+  return "📄";
+}
+
 export default function DocumentCard({ doc, onClick }) {
   return (
     <div
@@ -6,7 +19,7 @@ export default function DocumentCard({ doc, onClick }) {
       onClick={onClick}
     >
       <div className="doc-header">
-        <span className="doc-icon">📄</span>
+        <span className="doc-icon">{getFileIcon(doc.extension)}</span>
         <strong>{doc.name}</strong>
       </div>
 
