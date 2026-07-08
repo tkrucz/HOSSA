@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Integer, BigInteger, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from synchronizer.database import engine
 from sqlalchemy.orm import declarative_base
 
@@ -8,7 +9,6 @@ Base = declarative_base()
 
 
 class Status(Base):
-
     __tablename__ = "status"
 
     status_id = Column(Integer, primary_key=True)
@@ -18,7 +18,6 @@ class Status(Base):
 
 
 class Document(Base):
-
     __tablename__ = "documents"
 
     document_id = Column(UUID, primary_key=True)
@@ -35,3 +34,4 @@ class Document(Base):
     source_ = Column(String)
     rola_osoby_odpowiedzialnej = Column(String)
     kto_zatwierdzil = Column(String)
+    status = relationship("Status")

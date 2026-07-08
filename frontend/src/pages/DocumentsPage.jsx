@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import DocumentCard from "../components/DocumentCard.jsx";
+import DocumentCard from "../components/DocumentCard";
+import DocumentModal from "../components/DocumentModal";
 import { API_URL } from "../api";
 
 // Mirrors the `status` table - kept here so the legend always renders even
@@ -17,6 +18,7 @@ const LEGEND = [
 export default function DocumentsPage() {
   const { projectId, folderId } = useParams();
   const [docs, setDocs] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/projects/${projectId}/folders/${folderId}/documents`)
@@ -24,6 +26,14 @@ export default function DocumentsPage() {
       .then(setDocs)
       .catch(console.error);
   }, [projectId, folderId]);
+
+  const handleSaved = (updated) => {
+    setDocs((prev) =>
+      prev.map((d) =>
+        d.id === updated.id ? { ...d, status: updated.status, color: updated.color } : d
+      )
+    );
+  };
 
   return (
     <div className="page">
@@ -39,7 +49,11 @@ export default function DocumentsPage() {
 
       <div className="doc-grid">
         {docs.map((doc) => (
-          <DocumentCard key={doc.id} doc={doc} />
+          <DocumentCard
+            key={doc.id}
+            doc={doc}
+            onClick={() => setSelectedId(doc.id)}
+          />
         ))}
       </div>
 
@@ -54,6 +68,12 @@ export default function DocumentsPage() {
           </span>
         ))}
       </div>
+
+      <DocumentModal
+        documentId={selectedId}
+        onClose={() => setSelectedId(null)}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }

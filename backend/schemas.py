@@ -2,7 +2,6 @@ from pydantic import BaseModel
 
 
 class DocumentResponse(BaseModel):
-
     document_id: str
     doc_name: str
     status: str
