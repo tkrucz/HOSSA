@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import FolderCard from "../components/FolderCard.jsx";
+import FolderCard from "../components/FolderCard";
 import { API_URL } from "../api";
 
 export default function FoldersPage() {
@@ -21,7 +21,16 @@ export default function FoldersPage() {
         <Link to="/">← Projekty</Link> / {projectId}
       </div>
 
-      <h1>{projectId} - Podkatalogi</h1>
+      <div className="page-header">
+        <h1>{projectId} - Podkatalogi</h1>
+
+        <div className="view-tabs">
+          <span className="view-tab view-tab-active">Widok folderów</span>
+          <Link to={`/projects/${projectId}/dashboard`} className="view-tab">
+            Dashboard
+          </Link>
+        </div>
+      </div>
 
       <div className="card-grid">
         {folders.map((folder) => (

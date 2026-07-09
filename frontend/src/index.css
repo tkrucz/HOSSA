@@ -42,6 +42,66 @@ h1 {
   cursor: default;
 }
 
+.view-tabs {
+  display: flex;
+  gap: 4px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.view-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #4b5563;
+  text-decoration: none;
+}
+
+.view-tab:hover {
+  color: #1f2430;
+}
+
+.view-tab-active {
+  background: #fff;
+  color: #1f2430;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-scroll {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.dashboard-svg {
+  display: block;
+}
+
+.dashboard-box-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: #1f2430;
+  pointer-events: none;
+}
+
+.dashboard-box.clickable {
+  cursor: pointer;
+}
+
+.dashboard-box.clickable rect {
+  transition: stroke-opacity 0.15s ease, filter 0.15s ease;
+}
+
+.dashboard-box.clickable:hover rect {
+  stroke-opacity: 0.4;
+  filter: brightness(0.96);
+}
+
 .path-link {
   border: none;
   background: transparent;

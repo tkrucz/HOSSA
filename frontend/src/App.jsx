@@ -1,7 +1,8 @@
 import { Routes, Route } from "react-router-dom";
-import ProjectsPage from "./pages/ProjectsPage.jsx";
-import FoldersPage from "./pages/FoldersPage.jsx";
-import DocumentsPage from "./pages/DocumentsPage.jsx";
+import ProjectsPage from "./pages/ProjectsPage";
+import FoldersPage from "./pages/FoldersPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import DashboardPage from "./pages/DashboardPage";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         path="/projects/:projectId/folders/:folderId/documents"
         element={<DocumentsPage />}
       />
+      <Route path="/projects/:projectId/dashboard" element={<DashboardPage />} />
     </Routes>
   );
 }

@@ -74,6 +74,29 @@ def get_folders(project_id: str, db: Session = Depends(get_db)):
 
     return [{"id": f[0], "name": f[0], "count": f[1]} for f in folders]
 
+# Returns every document in a project, regardless of subfolder.
+# Used by the dashboard view, which matches documents to process-map boxes by exact name across the whole project rather than one folder at a time.
+@app.get("/projects/{project_id}/documents")
+def get_project_documents(project_id: str, db: Session = Depends(get_db)):
+    docs = (
+        db.query(Document)
+        .filter(func.split_part(Document.relative_path, PATH_SEP, 1) == project_id)
+        .all()
+    )
+
+    return [
+        {
+            "id": str(doc.document_id),
+            "name": doc.doc_name,
+            "extension": doc.extension_,
+            "status": doc.status.status,
+            "color": doc.status.color,
+            "size": doc.size_,
+            "modified_at": doc.modified_at.isoformat() if doc.modified_at else None,
+        }
+        for doc in docs
+    ]
+
 # Returns all documents for the selected project and folder.
 # Document metadata includes status, color, size, and last modification timestamp for dashboard presentation.
 @app.get("/projects/{project_id}/folders/{folder_id}/documents")

@@ -3,17 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import DocumentCard from "../components/DocumentCard";
 import DocumentModal from "../components/DocumentModal";
 import { API_URL } from "../api";
-
-// Mirrors the `status` table - kept here so the legend always renders even
-// before any documents load.
-const LEGEND = [
-  { status: "brak", color: "9E9D9B" },
-  { status: "w trakcie przygotowania", color: "FFA200" },
-  { status: "przygotowany", color: "A4E805" },
-  { status: "zatwierdzony", color: "05E810" },
-  { status: "nie dotyczy", color: "440373" },
-  { status: "wymaga zmian", color: "E81033" },
-];
+import { STATUS_LEGEND } from "../statusLegend";
 
 export default function DocumentsPage() {
   const { projectId, folderId } = useParams();
@@ -58,7 +48,7 @@ export default function DocumentsPage() {
       </div>
 
       <div className="legend">
-        {LEGEND.map((item) => (
+        {STATUS_LEGEND.map((item) => (
           <span key={item.status} className="legend-item">
             <span
               className="legend-dot"
