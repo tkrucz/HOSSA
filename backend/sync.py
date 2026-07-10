@@ -9,9 +9,7 @@ DOCUMENTS_FOLDER = r"C:\Users\tomek\Desktop\Dane"
 
 
 def sync_documents(folder: str = DOCUMENTS_FOLDER) -> dict:
-    """Scans `folder` for documents, inserts/updates them in the database,
-    and removes DB records for files that no longer exist on disk.
-
+    """Scans `folder` for documents, inserts/updates them in the database, and removes DB records for files that no longer exist on disk.
     Returns a dict with the counts of scanned and removed documents.
     """
     loader = DataLoader(folder)
@@ -31,9 +29,7 @@ def sync_documents(folder: str = DOCUMENTS_FOLDER) -> dict:
 
 def _remove_stale_documents(scanned_paths: set[str]) -> int:
     """Deletes documents whose relative_path is not in `scanned_paths`.
-
-    If `scanned_paths` is empty (e.g. folder is empty or missing), every
-    existing document is treated as stale and removed.
+    If `scanned_paths` is empty (e.g. folder is empty or missing), every existing document is treated as stale and removed.
     """
     session = SessionLocal()
 

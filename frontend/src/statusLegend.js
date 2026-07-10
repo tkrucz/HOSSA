@@ -1,3 +1,4 @@
+// Defines the document status colors for the legend
 export const STATUS_LEGEND = [
   { status: "brak", color: "9E9D9B" },
   { status: "w trakcie przygotowania", color: "FFA200" },

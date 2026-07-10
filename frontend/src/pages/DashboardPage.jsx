@@ -40,9 +40,8 @@ export default function DashboardPage() {
 
   useEffect(loadDocs, [projectId]);
 
-  // Exact doc_name -> document lookup. If a name repeats within the
-  // project (see the "Odbiór" caveat in dashboardConfig.js), the last
-  // match found wins.
+  // Exact doc_name -> document lookup. If a name repeats within the project
+  // (see the "Odbiór" caveat in dashboardConfig.js), the last match found wins.
   const docsByName = useMemo(() => {
     const map = {};
     docs.forEach((doc) => {

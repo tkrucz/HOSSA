@@ -3,8 +3,7 @@ export const BOX_HEIGHT = 60;
 export const COL_GAP = 220;
 export const ROW_GAP = 90;
 
-// x/y are in SVG units. Each box's `label` must match `doc_name` in the
-// database exactly - that's how status color gets attached to a box.
+// x/y are in SVG units. Each box's `label` must match `doc_name` in the database exactly - that's how status color gets attached to a box.
 //
 // NOTE: "Odbiór" appears three times here, same as in the hand-drawn
 // diagram. If your project has multiple documents literally named "Odbiór",

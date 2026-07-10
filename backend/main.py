@@ -158,7 +158,7 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         "kto_zatwierdzil": doc.kto_zatwierdzil,
     }
 
-# Opens absolute path with the OS
+# Opens absolute path within the OS
 @app.post("/documents/{document_id}/open")
 def open_document(document_id: str, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.document_id == document_id).first()
