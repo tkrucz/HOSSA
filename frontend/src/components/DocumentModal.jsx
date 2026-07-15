@@ -7,6 +7,8 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
   const [statusId, setStatusId] = useState("");
   const [rola, setRola] = useState("");
   const [ktoZatwierdzil, setKtoZatwierdzil] = useState("");
+  const [dataWaznosci, setDataWaznosci] = useState("");
+  const [nieDotyczy, setNieDotyczy] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -33,6 +35,8 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
         setStatusId(docData.status_id);
         setRola(docData.rola_osoby_odpowiedzialnej || "");
         setKtoZatwierdzil(docData.kto_zatwierdzil || "");
+        setDataWaznosci(docData.data_waznosci || "");
+        setNieDotyczy(!docData.data_waznosci);
       })
       .catch(() => setError("Nie udało się wczytać dokumentu."))
       .finally(() => setLoading(false));
@@ -51,6 +55,7 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
         status_id: statusId,
         rola_osoby_odpowiedzialnej: rola,
         kto_zatwierdzil: ktoZatwierdzil,
+        data_waznosci: nieDotyczy ? null : dataWaznosci || null,
       }),
     })
       .then((res) => {
@@ -135,6 +140,25 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
                 onChange={(e) => setKtoZatwierdzil(e.target.value)}
               />
             </label>
+
+            <div className="modal-field">
+              Data ważności
+              <label className="modal-checkbox">
+                <input
+                  type="checkbox"
+                  checked={nieDotyczy}
+                  onChange={(e) => setNieDotyczy(e.target.checked)}
+                />
+                Nie dotyczy
+              </label>
+              {!nieDotyczy && (
+                <input
+                  type="date"
+                  value={dataWaznosci}
+                  onChange={(e) => setDataWaznosci(e.target.value)}
+                />
+              )}
+            </div>
 
             {error && <p className="modal-error">{error}</p>}
 

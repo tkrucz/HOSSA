@@ -37,6 +37,7 @@ CREATE TABLE documents (
     source_ TEXT,
     rola_osoby_odpowiedzialnej TEXT,
     kto_zatwierdzil TEXT,
+    data_waznosci DATE, --dodane
 
     CONSTRAINT fk_documents_status
         FOREIGN KEY (status_id)

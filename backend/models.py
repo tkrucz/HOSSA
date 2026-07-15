@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, BigInteger, ForeignKey, DateTime
+from sqlalchemy import Column, String, Integer, BigInteger, ForeignKey, DateTime, Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import declarative_base
@@ -33,6 +33,7 @@ class Document(Base):
     source_ = Column(String)
     rola_osoby_odpowiedzialnej = Column(String)
     kto_zatwierdzil = Column(String)
+    data_waznosci = Column(Date)
 
     # Establishes the relationship allowing direct access to status information from a document instance.
     status = relationship("Status")

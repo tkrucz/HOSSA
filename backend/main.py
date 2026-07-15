@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from datetime import date
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -156,6 +157,7 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         "color": doc.status.color,
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
         "kto_zatwierdzil": doc.kto_zatwierdzil,
+        "data_waznosci": doc.data_waznosci.isoformat() if doc.data_waznosci else None,
     }
 
 # Opens absolute path within the OS
@@ -189,6 +191,7 @@ class DocumentUpdate(BaseModel):
     status_id: int | None = None
     rola_osoby_odpowiedzialnej: str | None = None
     kto_zatwierdzil: str | None = None
+    data_waznosci: date | None = None
 
 # Updates selected document attributes without replacing the entire record. Only provided fields are modified.
 @app.patch("/documents/{document_id}")
@@ -198,12 +201,11 @@ def update_document(document_id: str, payload: DocumentUpdate, db: Session = Dep
     if doc is None:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    if payload.status_id is not None:
-        doc.status_id = payload.status_id
-    if payload.rola_osoby_odpowiedzialnej is not None:
-        doc.rola_osoby_odpowiedzialnej = payload.rola_osoby_odpowiedzialnej
-    if payload.kto_zatwierdzil is not None:
-        doc.kto_zatwierdzil = payload.kto_zatwierdzil
+    # exclude_unset means a field genuinely absent from the request body is left untouched,
+    # while a field explicitly sent as `null` (e.g. marking data_waznosci "nie dotyczy") really does clear it to NULL.
+    updates = payload.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(doc, field, value)
 
     db.commit()
     db.refresh(doc)
@@ -216,4 +218,5 @@ def update_document(document_id: str, payload: DocumentUpdate, db: Session = Dep
         "color": doc.status.color,
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
         "kto_zatwierdzil": doc.kto_zatwierdzil,
+        "data_waznosci": doc.data_waznosci.isoformat() if doc.data_waznosci else None,
     }

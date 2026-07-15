@@ -323,6 +323,21 @@ h1 {
   font-family: inherit;
 }
 
+.modal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.modal-checkbox input {
+  width: auto;
+  cursor: pointer;
+}
+
 .modal-error {
   color: #b91c1c;
   font-size: 13px;
