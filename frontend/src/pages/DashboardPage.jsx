@@ -3,7 +3,13 @@ import { useParams, Link } from "react-router-dom";
 import DocumentModal from "../components/DocumentModal";
 import { API_URL } from "../api";
 import { STATUS_LEGEND } from "../statusLegend";
-import { BOXES, EDGES, BOX_WIDTH, BOX_HEIGHT } from "../config/dashboardConfig";
+import {
+  BOX_WIDTH,
+  BOX_HEIGHT,
+  BUILDING_BLOCK_HEIGHT,
+  discoverBuildings,
+  buildDashboardGraph,
+} from "../config/dashboardConfig";
 
 const DEFAULT_COLOR = "9E9D9B"; // "brak" - no matching document found
 
@@ -14,7 +20,7 @@ function wrapLabel(label) {
 
   words.forEach((word) => {
     const test = current ? `${current} ${word}` : word;
-    if (test.length > 16 && current) {
+    if (test.length > 14 && current) {
       lines.push(current);
       current = word;
     } else {
@@ -23,7 +29,7 @@ function wrapLabel(label) {
   });
 
   if (current) lines.push(current);
-  return lines.slice(0, 3);
+  return lines.slice(0, 4);
 }
 
 export default function DashboardPage() {
@@ -40,8 +46,7 @@ export default function DashboardPage() {
 
   useEffect(loadDocs, [projectId]);
 
-  // Exact doc_name -> document lookup. If a name repeats within the project
-  // (see the "Odbiór" caveat in dashboardConfig.js), the last match found wins.
+  // Exact doc_name -> document lookup.
   const docsByName = useMemo(() => {
     const map = {};
     docs.forEach((doc) => {
@@ -50,19 +55,32 @@ export default function DashboardPage() {
     return map;
   }, [docs]);
 
+  // Which buildings actually exist, discovered from real document names
+  // (see discoverBuildings() in dashboardConfig.js), then the box/edge
+  // graph is generated to fit exactly that many buildings - no fixed
+  // layout, it grows or shrinks with the data.
+  const buildings = useMemo(() => discoverBuildings(docs), [docs]);
+
+  const { boxes, edges } = useMemo(
+    () => buildDashboardGraph(buildings),
+    [buildings]
+  );
+
   const boxesById = useMemo(() => {
     const map = {};
-    BOXES.forEach((box) => {
+    boxes.forEach((box) => {
       map[box.id] = box;
     });
     return map;
-  }, []);
+  }, [boxes]);
 
-  const canvasWidth = Math.max(...BOXES.map((b) => b.x)) + BOX_WIDTH + 40;
-  const canvasHeight = Math.max(...BOXES.map((b) => b.y)) + BOX_HEIGHT + 40;
+  const canvasWidth =
+    (boxes.length ? Math.max(...boxes.map((b) => b.x)) : 0) + BOX_WIDTH + 40;
+  const canvasHeight =
+    (boxes.length ? Math.max(...boxes.map((b) => b.y)) : 0) + BOX_HEIGHT + 40;
 
   return (
-    <div className="page">
+    <div className="page dashboard-page">
       <div className="breadcrumb">
         <Link to="/">Projekty</Link> / {projectId}
       </div>
@@ -78,6 +96,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {buildings.length === 0 && (
+        <p className="dashboard-hint">
+          Nie wykryto jeszcze żadnego budynku - pojawi się tu, gdy w projekcie
+          znajdzie się dokument nazwany np. "Budynek A - Geodezja".
+        </p>
+      )}
+
       <div className="dashboard-scroll">
         <svg
           className="dashboard-svg"
@@ -85,7 +110,18 @@ export default function DashboardPage() {
           width={canvasWidth}
           height={canvasHeight}
         >
-          {EDGES.map(([fromId, toId]) => {
+          {buildings.map((building, i) => (
+            <text
+              key={building}
+              x={10}
+              y={i * BUILDING_BLOCK_HEIGHT + 175}
+              className="dashboard-building-label"
+            >
+              {building}
+            </text>
+          ))}
+
+          {edges.map(([fromId, toId]) => {
             const from = boxesById[fromId];
             const to = boxesById[toId];
             if (!from || !to) return null;
@@ -103,7 +139,7 @@ export default function DashboardPage() {
             );
           })}
 
-          {BOXES.map((box) => {
+          {boxes.map((box) => {
             const doc = docsByName[box.label];
             const color = doc ? doc.color : DEFAULT_COLOR;
             const lines = wrapLabel(box.label);

@@ -11,6 +11,12 @@ body {
   padding: 24px 32px 64px;
 }
 
+.dashboard-page {
+  max-width: none;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
 h1 {
   font-size: 22px;
   margin: 8px 0 20px;
@@ -100,6 +106,18 @@ h1 {
 .dashboard-box.clickable:hover rect {
   stroke-opacity: 0.4;
   filter: brightness(0.96);
+}
+
+.dashboard-building-label {
+  font-size: 13px;
+  font-weight: 700;
+  fill: #1f2430;
+}
+
+.dashboard-hint {
+  font-size: 13px;
+  color: #6b7280;
+  margin: -8px 0 16px;
 }
 
 .path-link {

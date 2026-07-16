@@ -26,8 +26,13 @@ export default function FoldersPage() {
 
         <div className="view-tabs">
           <span className="view-tab view-tab-active">Widok folderów</span>
-          <Link to={`/projects/${projectId}/dashboard`} className="view-tab">
-            Dashboard
+          <Link
+            to={`/projects/${projectId}/dashboard`}
+            className="view-tab"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Dashboard ⧉
           </Link>
         </div>
       </div>
