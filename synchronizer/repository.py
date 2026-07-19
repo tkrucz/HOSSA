@@ -13,42 +13,34 @@ class DocumentRepository:
         self.connection = database.get_connection()
 
     def save(self, document: Document):
-
         cursor = self.connection.cursor()
 
         query = """
-        INSERT INTO documents
-        (
-            doc_name,
-            extension_,
-            absolute_path,
-            relative_path,
-            size_,
-            created_at,
-            modified_at,
-            hash,
-            source_
-        )
+                INSERT INTO documents
+                (doc_name, \
+                 extension_, \
+                 absolute_path, \
+                 relative_path, \
+                 size_, \
+                 data_utworzenia_dokumentu, \
+                 data_zmiany_dokumentu, \
+                 hash, \
+                 source_)
 
-        VALUES
-        (
-            %s,%s,%s,%s,%s,%s,%s,%s,%s
-        )
-
-        ON CONFLICT(relative_path)
-        DO UPDATE SET
-
-        hash = EXCLUDED.hash,
-        size_ = EXCLUDED.size_,
-        created_at = EXCLUDED.created_at,
-        modified_at = EXCLUDED.modified_at,
-        source_ = EXCLUDED.source_,
-        status_id = CASE
-            WHEN documents.status_id = (SELECT status_id FROM status WHERE status = %s)
-            THEN (SELECT status_id FROM status WHERE status = %s)
-            ELSE documents.status_id
-        END
-        """
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT(relative_path)
+        DO \
+                UPDATE SET \
+                    hash = EXCLUDED.hash, \
+                    size_ = EXCLUDED.size_, \
+                    data_utworzenia_dokumentu = EXCLUDED.data_utworzenia_dokumentu, \
+                    data_zmiany_dokumentu = EXCLUDED.data_zmiany_dokumentu, \
+                    source_ = EXCLUDED.source_, \
+                    status_id = CASE \
+                    WHEN documents.status_id = (SELECT status_id FROM status WHERE status = %s) \
+                    THEN (SELECT status_id FROM status WHERE status = %s) \
+                    ELSE documents.status_id
+                END \
+                """
         # A brand new file has no `documents` row yet, so it takes the table's own DEFAULT (status_id 1 / "brak") - nothing to set here.
         # Only the ON CONFLICT branch (the file already existed and is being re-synced) auto-advances "brak" -> "w trakcie przygotowania",
         # and only when it's still exactly "brak". Any status an employee picked manually is preserved on every future sync.

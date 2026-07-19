@@ -27,13 +27,14 @@ class Document(Base):
     absolute_path = Column(String)
     relative_path = Column(String)
     size_ = Column(BigInteger)
-    created_at = Column(DateTime)
-    modified_at = Column(DateTime)
+    data_utworzenia_dokumentu = Column(Date)
+    data_zmiany_dokumentu = Column(DateTime)
     hash = Column(String)
     source_ = Column(String)
     rola_osoby_odpowiedzialnej = Column(String)
     kto_zatwierdzil = Column(String)
     data_waznosci = Column(Date)
+    data_modyfikacji_statusu_dokumentu = Column(DateTime)
 
     # Establishes the relationship allowing direct access to status information from a document instance.
     status = relationship("Status")

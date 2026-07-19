@@ -107,6 +107,13 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
 
               <dt>Zmodyfikowano</dt>
               <dd>{doc.modified_at ? doc.modified_at.slice(0, 10) : "-"}</dd>
+
+              <dt>Status zmieniono</dt>
+              <dd>
+                {doc.status_modified_at
+                  ? doc.status_modified_at.slice(0, 16).replace("T", " ")
+                  : "-"}
+              </dd>
             </dl>
 
             <label className="modal-field">

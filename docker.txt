@@ -7,6 +7,8 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DROP TABLE IF EXISTS documents;
 DROP TABLE IF EXISTS status;
+DROP FUNCTION IF EXISTS set_modification_dt;
+DROP FUNCTION IF EXISTS trg_set_modification_dt;
 
 CREATE TABLE status (
     status_id SMALLSERIAL PRIMARY KEY,
@@ -31,18 +33,33 @@ CREATE TABLE documents (
     absolute_path TEXT,
     relative_path TEXT UNIQUE,
     size_ BIGINT,
-    created_at TIMESTAMP,
-    modified_at TIMESTAMP,
+    data_utworzenia_dokumentu DATE,
+    data_zmiany_dokumentu TIMESTAMP, --modyfikacja dokumentu
     hash TEXT,
     source_ TEXT,
     rola_osoby_odpowiedzialnej TEXT,
     kto_zatwierdzil TEXT,
-    data_waznosci DATE, --dodane
+    data_waznosci DATE,
+    data_modyfikacji_statusu_dokumentu TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- modyfikacja elementów statusu dokumentu
 
     CONSTRAINT fk_documents_status
         FOREIGN KEY (status_id)
         REFERENCES status(status_id)
 );
+
+CREATE OR REPLACE FUNCTION set_modification_dt()
+    RETURNS TRIGGER AS $$
+    BEGIN
+	NEW.data_modyfikacji_statusu_dokumentu := CURRENT_TIMESTAMP;
+	RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_set_modification_dt
+    BEFORE UPDATE ON documents
+    FOR EACH ROW
+    WHEN (OLD.* IS DISTINCT FROM NEW.*)
+    EXECUTE FUNCTION set_modification_dt();
 
 Będąc w folderze HOSSA
 

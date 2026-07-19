@@ -93,7 +93,7 @@ def get_project_documents(project_id: str, db: Session = Depends(get_db)):
             "status": doc.status.status,
             "color": doc.status.color,
             "size": doc.size_,
-            "modified_at": doc.modified_at.isoformat() if doc.modified_at else None,
+            "modified_at": doc.data_zmiany_dokumentu.isoformat() if doc.data_zmiany_dokumentu else None,
         }
         for doc in docs
     ]
@@ -118,7 +118,7 @@ def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)
             "status": doc.status.status,
             "color": doc.status.color,
             "size": doc.size_,
-            "modified_at": doc.modified_at.isoformat() if doc.modified_at else None,
+            "modified_at": doc.data_zmiany_dokumentu.isoformat() if doc.data_zmiany_dokumentu else None,
         }
         for doc in docs
     ]
@@ -148,8 +148,8 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         "relative_path": doc.relative_path,
         "absolute_path": doc.absolute_path,
         "size": doc.size_,
-        "created_at": doc.created_at.isoformat() if doc.created_at else None,
-        "modified_at": doc.modified_at.isoformat() if doc.modified_at else None,
+        "created_at": doc.data_utworzenia_dokumentu.isoformat() if doc.data_utworzenia_dokumentu else None,
+        "modified_at": doc.data_zmiany_dokumentu.isoformat() if doc.data_zmiany_dokumentu else None,
         "hash": doc.hash,
         "source": doc.source_,
         "status_id": doc.status_id,
@@ -158,6 +158,9 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
         "kto_zatwierdzil": doc.kto_zatwierdzil,
         "data_waznosci": doc.data_waznosci.isoformat() if doc.data_waznosci else None,
+        "status_modified_at": doc.data_modyfikacji_statusu_dokumentu.isoformat()
+        if doc.data_modyfikacji_statusu_dokumentu
+        else None,
     }
 
 # Opens absolute path within the OS
@@ -195,7 +198,9 @@ class DocumentUpdate(BaseModel):
 
 # Updates selected document attributes without replacing the entire record. Only provided fields are modified.
 @app.patch("/documents/{document_id}")
-def update_document(document_id: str, payload: DocumentUpdate, db: Session = Depends(get_db)):
+def update_document(
+    document_id: str, payload: DocumentUpdate, db: Session = Depends(get_db)
+):
     doc = db.query(Document).filter(Document.document_id == document_id).first()
 
     if doc is None:
@@ -219,4 +224,7 @@ def update_document(document_id: str, payload: DocumentUpdate, db: Session = Dep
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
         "kto_zatwierdzil": doc.kto_zatwierdzil,
         "data_waznosci": doc.data_waznosci.isoformat() if doc.data_waznosci else None,
+        "status_modified_at": doc.data_modyfikacji_statusu_dokumentu.isoformat()
+        if doc.data_modyfikacji_statusu_dokumentu
+        else None,
     }
