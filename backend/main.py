@@ -10,7 +10,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-from backend.models import Document, Status
+from backend.models import Document, Status, DocumentVersion
 from backend.sync import sync_documents
 
 # Path separator used to extract project and folder names from the relative document path stored in the database.
@@ -162,6 +162,33 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         if doc.data_modyfikacji_statusu_dokumentu
         else None,
     }
+
+# Returns the archived history of a document - every prior state of its
+# status/rola_osoby_odpowiedzialnej/kto_zatwierdzil/data_waznosci, each with
+# the time window it was valid for. Populated by the archive_document_version
+# trigger, not by application code - the app only ever writes the current row in `documents`.
+@app.get("/documents/{document_id}/versions")
+def get_document_versions(document_id: str, db: Session = Depends(get_db)):
+    versions = (
+        db.query(DocumentVersion)
+        .filter(DocumentVersion.document_id == document_id)
+        .order_by(DocumentVersion.start_dt.desc())
+        .all()
+    )
+
+    return [
+        {
+            "id": str(v.version_id),
+            "status": v.status.status,
+            "color": v.status.color,
+            "rola_osoby_odpowiedzialnej": v.rola_osoby_odpowiedzialnej,
+            "kto_zatwierdzil": v.kto_zatwierdzil,
+            "data_waznosci": v.data_waznosci.isoformat() if v.data_waznosci else None,
+            "start_dt": v.start_dt.isoformat() if v.start_dt else None,
+            "end_dt": v.end_dt.isoformat() if v.end_dt else None,
+        }
+        for v in versions
+    ]
 
 # Opens absolute path within the OS
 @app.post("/documents/{document_id}/open")

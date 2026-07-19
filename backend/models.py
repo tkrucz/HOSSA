@@ -34,7 +34,26 @@ class Document(Base):
     rola_osoby_odpowiedzialnej = Column(String)
     kto_zatwierdzil = Column(String)
     data_waznosci = Column(Date)
+    start_dt = Column(DateTime)
+    end_dt = Column(DateTime)
     data_modyfikacji_statusu_dokumentu = Column(DateTime)
+
+    # Establishes the relationship allowing direct access to status information from a document instance.
+    status = relationship("Status")
+
+
+class DocumentVersion(Base):
+    __tablename__ = "document_versions"
+
+    version_id = Column(UUID, primary_key=True)
+    document_id = Column(UUID, ForeignKey("documents.document_id"))
+    status_id = Column(Integer, ForeignKey("status.status_id"))
+
+    rola_osoby_odpowiedzialnej = Column(String)
+    kto_zatwierdzil = Column(String)
+    data_waznosci = Column(Date)
+    start_dt = Column(DateTime)
+    end_dt = Column(DateTime)
 
     # Establishes the relationship allowing direct access to status information from a document instance.
     status = relationship("Status")

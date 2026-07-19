@@ -6,9 +6,16 @@ Komendy SQL do stworzenia bazy:
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DROP TABLE IF EXISTS documents;
+DROP TABLE IF EXISTS documents_versions;
 DROP TABLE IF EXISTS status;
+
+DROP INDEX IF EXISTS idx_document_versions_document_id;
+
 DROP FUNCTION IF EXISTS set_modification_dt;
 DROP FUNCTION IF EXISTS trg_set_modification_dt;
+
+DROP FUNCTION IF EXISTS archive_document_version;
+DROP FUNCTION IF EXISTS trg_archive_document_version;
 
 CREATE TABLE status (
     status_id SMALLSERIAL PRIMARY KEY,
@@ -40,12 +47,33 @@ CREATE TABLE documents (
     rola_osoby_odpowiedzialnej TEXT,
     kto_zatwierdzil TEXT,
     data_waznosci DATE,
+	start_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- start_dt, end_dt are attirbutes needed to navigate between the previous versions of documents
+	end_dt TIMESTAMP DEFAULT NULL,
     data_modyfikacji_statusu_dokumentu TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- modyfikacja elementów statusu dokumentu
 
     CONSTRAINT fk_documents_status
         FOREIGN KEY (status_id)
         REFERENCES status(status_id)
 );
+
+CREATE TABLE document_versions (
+    version_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID NOT NULL,
+    status_id SMALLINT NOT NULL,
+    rola_osoby_odpowiedzialnej TEXT,
+    kto_zatwierdzil TEXT,
+    data_waznosci DATE,
+    start_dt TIMESTAMP NOT NULL,
+    end_dt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_document_versions_document
+        FOREIGN KEY (document_id)
+        REFERENCES documents(document_id),
+    CONSTRAINT fk_document_versions_status
+        FOREIGN KEY (status_id)
+        REFERENCES status(status_id)
+);
+
+CREATE INDEX idx_document_versions_document_id ON document_versions(document_id);
 
 CREATE OR REPLACE FUNCTION set_modification_dt()
     RETURNS TRIGGER AS $$
@@ -60,6 +88,33 @@ CREATE OR REPLACE TRIGGER trg_set_modification_dt
     FOR EACH ROW
     WHEN (OLD.* IS DISTINCT FROM NEW.*)
     EXECUTE FUNCTION set_modification_dt();
+
+CREATE OR REPLACE FUNCTION archive_document_version()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        IF (
+            OLD.status_id IS DISTINCT FROM NEW.status_id OR
+            OLD.rola_osoby_odpowiedzialnej IS DISTINCT FROM NEW.rola_osoby_odpowiedzialnej OR
+            OLD.kto_zatwierdzil IS DISTINCT FROM NEW.kto_zatwierdzil OR
+            OLD.data_waznosci IS DISTINCT FROM NEW.data_waznosci
+        ) THEN
+            INSERT INTO document_versions
+                (document_id, status_id, rola_osoby_odpowiedzialnej, kto_zatwierdzil, data_waznosci, start_dt, end_dt)
+            VALUES
+                (OLD.document_id, OLD.status_id, OLD.rola_osoby_odpowiedzialnej, OLD.kto_zatwierdzil, OLD.data_waznosci, OLD.start_dt, CURRENT_TIMESTAMP);
+
+            NEW.start_dt := CURRENT_TIMESTAMP;
+        END IF;
+
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_archive_document_version
+    BEFORE UPDATE ON documents
+    FOR EACH ROW
+    WHEN (OLD.* IS DISTINCT FROM NEW.*)
+    EXECUTE FUNCTION archive_document_version();
 
 Będąc w folderze HOSSA
 

@@ -12,12 +12,17 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [showVersions, setShowVersions] = useState(false);
+  const [versions, setVersions] = useState(null);
+  const [versionsLoading, setVersionsLoading] = useState(false);
 
   useEffect(() => {
     if (!documentId) return;
 
     setLoading(true);
     setError(null);
+    setShowVersions(false);
+    setVersions(null);
 
     Promise.all([
       fetch(`${API_URL}/documents/${documentId}`).then((res) => {
@@ -76,6 +81,23 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
     );
   };
 
+  const handleToggleVersions = () => {
+    const next = !showVersions;
+    setShowVersions(next);
+
+    if (next && versions === null) {
+      setVersionsLoading(true);
+      fetch(`${API_URL}/documents/${documentId}/versions`)
+        .then((res) => {
+          if (!res.ok) throw new Error();
+          return res.json();
+        })
+        .then(setVersions)
+        .catch(() => setError("Nie udało się wczytać poprzednich wersji."))
+        .finally(() => setVersionsLoading(false));
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -115,6 +137,60 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
                   : "-"}
               </dd>
             </dl>
+
+            <button
+              type="button"
+              className="versions-toggle"
+              onClick={handleToggleVersions}
+            >
+              {showVersions ? "Ukryj poprzednie wersje" : "Poprzednie wersje"}
+            </button>
+
+            {showVersions && (
+              <div className="versions-panel">
+                {versionsLoading && <p>Ładowanie…</p>}
+
+                {!versionsLoading && versions && versions.length === 0 && (
+                  <p className="versions-empty">
+                    Brak wcześniejszych wersji tego dokumentu.
+                  </p>
+                )}
+
+                {!versionsLoading && versions && versions.length > 0 && (
+                  <ul className="versions-list">
+                    {versions.map((v) => (
+                      <li key={v.id} className="version-item">
+                        <span
+                          className="version-status-dot"
+                          style={{ backgroundColor: `#${v.color}` }}
+                        />
+                        <div className="version-item-body">
+                          <div className="version-item-row">
+                            <strong>{v.status}</strong>
+                            <span className="version-item-dates">
+                              {v.start_dt ? v.start_dt.slice(0, 16).replace("T", " ") : "-"}
+                              {" \u2192 "}
+                              {v.end_dt ? v.end_dt.slice(0, 16).replace("T", " ") : "-"}
+                            </span>
+                          </div>
+                          <div className="version-item-meta">
+                            {v.rola_osoby_odpowiedzialnej && (
+                              <span>Rola: {v.rola_osoby_odpowiedzialnej}</span>
+                            )}
+                            {v.kto_zatwierdzil && (
+                              <span>Zatwierdził: {v.kto_zatwierdzil}</span>
+                            )}
+                            {v.data_waznosci && (
+                              <span>Ważny do: {v.data_waznosci}</span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <label className="modal-field">
               Status
