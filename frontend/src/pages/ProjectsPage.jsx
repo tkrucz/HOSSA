@@ -25,12 +25,19 @@ export default function ProjectsPage() {
     setError(null);
 
     fetch(`${API_URL}/sync`, { method: "POST" })
-      .then((res) => {
-        if (!res.ok) throw new Error();
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.detail || `Błąd serwera (${res.status})`);
+        }
         return res.json();
       })
       .then(() => fetchProjects())
-      .catch(() => setError("Nie udało się załadować dokumentów ponownie."))
+      .catch((err) =>
+        setError(
+          `Nie udało się załadować dokumentów ponownie: ${err.message}`
+        )
+      )
       .finally(() => setSyncing(false));
   };
 

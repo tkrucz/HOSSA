@@ -67,12 +67,14 @@ CREATE TABLE document_versions (
     end_dt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_document_versions_document
         FOREIGN KEY (document_id)
-        REFERENCES documents(document_id),
+        REFERENCES documents(document_id)
+        ON DELETE CASCADE,
     CONSTRAINT fk_document_versions_status
         FOREIGN KEY (status_id)
         REFERENCES status(status_id)
 );
 
+-- Helpful for "show me this document's history" queries.
 CREATE INDEX idx_document_versions_document_id ON document_versions(document_id);
 
 CREATE OR REPLACE FUNCTION set_modification_dt()
@@ -89,6 +91,8 @@ CREATE OR REPLACE TRIGGER trg_set_modification_dt
     WHEN (OLD.* IS DISTINCT FROM NEW.*)
     EXECUTE FUNCTION set_modification_dt();
 
+-- Archives the OUTGOING row into document_versions whenever any of the fields change (e.g. status, rola_osoby_odpowiedzialnej, kto_zatwierdzil, data_waznosci).
+-- Fields like hash/size_/data_zmiany_dokumentu (routine re-sync noise from the filesystem scanner) do NOT trigger a new version , only actual human-editable metadata changes do.
 CREATE OR REPLACE FUNCTION archive_document_version()
     RETURNS TRIGGER AS $$
     BEGIN
@@ -110,6 +114,8 @@ CREATE OR REPLACE FUNCTION archive_document_version()
     END;
     $$ LANGUAGE plpgsql;
 
+-- Runs BEFORE trg_set_modification_dt alphabetically ("archive" < "set"), so it sees OLD/NEW as the caller sent them,
+-- before that trigger's own NEW mutation - order doesn't actually matter here since the two triggers touch different columns, but noting it for clarity.
 CREATE OR REPLACE TRIGGER trg_archive_document_version
     BEFORE UPDATE ON documents
     FOR EACH ROW
