@@ -7,13 +7,11 @@ export const ROW_GAP = 90;
 export const BUILDING_BLOCK_HEIGHT = 4 * ROW_GAP + 60;
 
 // Buildings start below all the shared "intro" content (input boxes,
-// Warunki usunięcia kolizji chain, Dane do warunków fan-out) so nothing
-// overlaps regardless of how tall that shared content is.
+// Warunki usunięcia kolizji chain, Dane do warunków fan-out) so nothing overlaps regardless of how tall that shared content is.
 export const BUILDING_Y_BASE = 600;
 
 // Column each building's anchor box sits in - one step right of
-// "Koncepcja Wstępna", one step left of the building's own mapa_cel/
-// geodezja/koncepcja_arch fan-out.
+// "Koncepcja Wstępna", one step left of the building's own mapa_cel/geodezja/koncepcja_arch fan-out.
 export const ANCHOR_X = 440;
 
 // Convention used to derive a building name from a document name, e.g.
@@ -49,12 +47,9 @@ export const SHARED_BOXES = [
   { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: 880, y: 670 },
 ];
 
-// Per-building template. `x` is the stage column - shared across all
-// buildings, since every building goes through the same process stages.
-// `y` is relative to that building's own block; buildDashboardGraph()
-// offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
-// Columns start at x = 660 (one step right of each building's anchor box
-// at x = ANCHOR_X).
+// Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages. y` is relative to that building's own block;
+// buildDashboardGraph() offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
+// Columns start at x = 660 (one step right of each building's anchor box at x = ANCHOR_X).
 export const BUILDING_BOX_TEMPLATE = [
   { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: 660, y: 0 },
   { id: "geodezja", suffix: "Geodezja", x: 660, y: 90 },
@@ -88,10 +83,8 @@ export const BUILDING_BOX_TEMPLATE = [
 ];
 
 // Template edges among SHARED boxes and among BUILDING_BOX_TEMPLATE boxes.
-// Edges connecting koncepcja_wstepna to each building's anchor, and each
-// anchor to its own mapa_cel/geodezja/koncepcja_arch, are generated
-// separately in buildDashboardGraph() below - they're not "template ids",
-// they're synthetic per-building nodes.
+// Edges connecting koncepcja_wstepna to each building's anchor, and each anchor to its own mapa_cel/geodezja/koncepcja_arch, are generated
+// separately in buildDashboardGraph() below - they're not "template ids", they're synthetic per-building nodes.
 export const EDGE_TEMPLATE = [
   ["mapa_dc", "koncepcja_wstepna"],
   ["domiary", "koncepcja_wstepna"],
@@ -145,10 +138,9 @@ export function buildLabel(building, suffix) {
   return `${building}${BUILDING_SEPARATOR}${suffix}`;
 }
 
-// Looks at the actual documents fetched for a project and figures out
-// which building names are present, by finding doc names that end with
-// "{BUILDING_SEPARATOR}{known stage suffix}". Returns a sorted, deduped
-// list - no manual configuration needed.
+// Looks at the actual documents fetched for a project and figures out which building names are present,
+// by finding doc names that end with "{BUILDING_SEPARATOR}{known stage suffix}". Returns a sorted,
+// deduped list - no manual configuration needed.
 export function discoverBuildings(docs) {
   const names = new Set();
 
@@ -165,9 +157,8 @@ export function discoverBuildings(docs) {
 }
 
 // Builds the full box + edge list for a given list of building names.
-// Each building gets: one anchor box (id `anchor::{building}`, a purely
-// visual node - not matched to any document), plus one box per
-// BUILDING_BOX_TEMPLATE entry.
+// Each building gets: one anchor box (id `anchor::{building}`, a purely visual node - not matched to any document),
+// plus one box per BUILDING_BOX_TEMPLATE entry.
 export function buildDashboardGraph(buildings) {
   const boxes = [...SHARED_BOXES];
   const edges = [];
