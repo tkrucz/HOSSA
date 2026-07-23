@@ -6,7 +6,6 @@ import { STATUS_LEGEND } from "../statusLegend";
 import {
   BOX_WIDTH,
   BOX_HEIGHT,
-  BUILDING_BLOCK_HEIGHT,
   discoverBuildings,
   buildDashboardGraph,
 } from "../config/dashboardConfig";
@@ -110,17 +109,6 @@ export default function DashboardPage() {
           width={canvasWidth}
           height={canvasHeight}
         >
-          {buildings.map((building, i) => (
-            <text
-              key={building}
-              x={10}
-              y={i * BUILDING_BLOCK_HEIGHT + 175}
-              className="dashboard-building-label"
-            >
-              {building}
-            </text>
-          ))}
-
           {edges.map(([fromId, toId]) => {
             const from = boxesById[fromId];
             const to = boxesById[toId];
@@ -140,7 +128,7 @@ export default function DashboardPage() {
           })}
 
           {boxes.map((box) => {
-            const doc = docsByName[box.label];
+            const doc = box.isAnchor ? null : docsByName[box.label];
             const color = doc ? doc.color : DEFAULT_COLOR;
             const lines = wrapLabel(box.label);
             const clickable = Boolean(doc);
@@ -151,22 +139,31 @@ export default function DashboardPage() {
                 transform={`translate(${box.x}, ${box.y})`}
                 onClick={clickable ? () => setSelectedId(doc.id) : undefined}
                 className={
-                  clickable ? "dashboard-box clickable" : "dashboard-box"
+                  box.isAnchor
+                    ? "dashboard-box anchor"
+                    : clickable
+                    ? "dashboard-box clickable"
+                    : "dashboard-box"
                 }
               >
                 <rect
                   width={BOX_WIDTH}
                   height={BOX_HEIGHT}
                   rx="8"
-                  fill={`#${color}`}
-                  stroke="#1f2430"
-                  strokeOpacity="0.15"
+                  fill={box.isAnchor ? "#ffffff" : `#${color}`}
+                  stroke={box.isAnchor ? "#1f2430" : "#1f2430"}
+                  strokeWidth={box.isAnchor ? "2" : "1"}
+                  strokeOpacity={box.isAnchor ? "0.6" : "0.15"}
                 />
                 <text
                   x={BOX_WIDTH / 2}
                   y={BOX_HEIGHT / 2 - ((lines.length - 1) * 12) / 2 + 4}
                   textAnchor="middle"
-                  className="dashboard-box-label"
+                  className={
+                    box.isAnchor
+                      ? "dashboard-box-label anchor-label"
+                      : "dashboard-box-label"
+                  }
                 >
                   {lines.map((line, i) => (
                     <tspan key={i} x={BOX_WIDTH / 2} dy={i === 0 ? 0 : 12}>

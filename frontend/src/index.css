@@ -95,6 +95,11 @@ h1 {
   pointer-events: none;
 }
 
+.anchor-label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .dashboard-box.clickable {
   cursor: pointer;
 }
