@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { API_URL } from "../api";
+import { useAuth, authHeaders } from "../authContext";
 
 export default function DocumentModal({ documentId, onClose, onSaved }) {
+  const { token } = useAuth();
   const [doc, setDoc] = useState(null);
   const [statuses, setStatuses] = useState([]);
   const [statusId, setStatusId] = useState("");
   const [rola, setRola] = useState("");
-  const [ktoZatwierdzil, setKtoZatwierdzil] = useState("");
+  const [zatwierdzone, setZatwierdzone] = useState(false);
   const [dataWaznosci, setDataWaznosci] = useState("");
   const [nieDotyczy, setNieDotyczy] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
         setStatuses(statusList);
         setStatusId(docData.status_id);
         setRola(docData.rola_osoby_odpowiedzialnej || "");
-        setKtoZatwierdzil(docData.kto_zatwierdzil || "");
+        setZatwierdzone(Boolean(docData.zatwierdzone));
         setDataWaznosci(docData.data_waznosci || "");
         setNieDotyczy(!docData.data_waznosci);
       })
@@ -55,23 +57,29 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
 
     fetch(`${API_URL}/documents/${documentId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(token),
+      },
       body: JSON.stringify({
         status_id: statusId,
         rola_osoby_odpowiedzialnej: rola,
-        kto_zatwierdzil: ktoZatwierdzil,
+        zatwierdzone,
         data_waznosci: nieDotyczy ? null : dataWaznosci || null,
       }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error();
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.detail || "Nie udało się zapisać zmian.");
+        }
         return res.json();
       })
       .then((updated) => {
         onSaved(updated);
         onClose();
       })
-      .catch(() => setError("Nie udało się zapisać zmian."))
+      .catch((err) => setError(err.message))
       .finally(() => setSaving(false));
   };
 
@@ -136,6 +144,9 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
                   ? doc.status_modified_at.slice(0, 16).replace("T", " ")
                   : "-"}
               </dd>
+
+              <dt>Ostatnio zmienił</dt>
+              <dd>{doc.zatwierdzil || "-"}</dd>
             </dl>
 
             <button
@@ -177,9 +188,8 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
                             {v.rola_osoby_odpowiedzialnej && (
                               <span>Rola: {v.rola_osoby_odpowiedzialnej}</span>
                             )}
-                            {v.kto_zatwierdzil && (
-                              <span>Zatwierdził: {v.kto_zatwierdzil}</span>
-                            )}
+                            <span>{v.zatwierdzone ? "Zatwierdzony" : "Niezatwierdzony"}</span>
+                            {v.zatwierdzil && <span>Przez: {v.zatwierdzil}</span>}
                             {v.data_waznosci && (
                               <span>Ważny do: {v.data_waznosci}</span>
                             )}
@@ -215,13 +225,13 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
               />
             </label>
 
-            <label className="modal-field">
-              Kto zatwierdził
+            <label className="modal-checkbox modal-field">
               <input
-                type="text"
-                value={ktoZatwierdzil}
-                onChange={(e) => setKtoZatwierdzil(e.target.value)}
+                type="checkbox"
+                checked={zatwierdzone}
+                onChange={(e) => setZatwierdzone(e.target.checked)}
               />
+              Zatwierdzone
             </label>
 
             <div className="modal-field">

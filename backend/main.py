@@ -10,10 +10,17 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-from backend.models import Document, Status, DocumentVersion
+from backend.models import Document, Status, DocumentVersion, User
 from backend.sync import sync_documents
+from backend.auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user,
+)
 
-# Path separator used to extract project and folder names from the relative document path stored in the database.
+# relative_path values are stored as Windows-style paths, e.g.
+# "Projekt 1\Podkatalog 1\Dokument 11.pdf" - split on backslash, not "/"
 PATH_SEP = "\\"
 
 app = FastAPI()
@@ -25,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Creates a database session for each request and ensures it is properly closed after the request is completed.
+
 def get_db():
     db = SessionLocal()
     try:
@@ -33,7 +40,81 @@ def get_db():
     finally:
         db.close()
 
-# Synchronizes the documents which might have changed locally
+
+def user_display_name(user: User | None) -> str | None:
+    if user is None:
+        return None
+    return f"{user.user_name} {user.user_surname}"
+
+
+class RegisterRequest(BaseModel):
+    user_name: str
+    user_surname: str
+    login: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    login: str
+    password: str
+
+
+@app.post("/auth/register")
+def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.login == payload.login).first()
+    if existing is not None:
+        raise HTTPException(status_code=400, detail="Ten login jest już zajęty")
+
+    user = User(
+        user_name=payload.user_name,
+        user_surname=payload.user_surname,
+        login=payload.login,
+        password=hash_password(payload.password),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    token = create_access_token(user.user_id)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.user_id,
+            "name": user_display_name(user),
+            "login": user.login,
+        },
+    }
+
+
+@app.post("/auth/login")
+def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.login == payload.login).first()
+
+    if user is None or not verify_password(payload.password, user.password):
+        raise HTTPException(status_code=401, detail="Nieprawidłowy login lub hasło")
+
+    token = create_access_token(user.user_id)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.user_id,
+            "name": user_display_name(user),
+            "login": user.login,
+        },
+    }
+
+
+@app.get("/auth/me")
+def get_me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.user_id,
+        "name": user_display_name(current_user),
+        "login": current_user.login,
+    }
+
+
 @app.post("/sync")
 def sync():
     try:
@@ -43,8 +124,7 @@ def sync():
 
     return result
 
-# Returns all available projects by grouping documents based on the first directory in the relative path.
-# Also calculates the number of documents per project.
+
 @app.get("/projects")
 def get_projects(db: Session = Depends(get_db)):
     projects = (
@@ -59,7 +139,7 @@ def get_projects(db: Session = Depends(get_db)):
 
     return [{"id": p[0], "name": p[0], "count": p[1]} for p in projects]
 
-# Retrieves folders belonging to the selected project together with the number of documents in each folder.
+
 @app.get("/projects/{project_id}/folders")
 def get_folders(project_id: str, db: Session = Depends(get_db)):
     folders = (
@@ -75,8 +155,10 @@ def get_folders(project_id: str, db: Session = Depends(get_db)):
 
     return [{"id": f[0], "name": f[0], "count": f[1]} for f in folders]
 
-# Returns every document in a project, regardless of subfolder.
-# Used by the dashboard view, which matches documents to process-map boxes by exact name across the whole project rather than one folder at a time.
+
+# Returns every document in a project, regardless of subfolder. Used by the
+# dashboard view, which matches documents to process-map boxes by exact name
+# across the whole project rather than one folder at a time.
 @app.get("/projects/{project_id}/documents")
 def get_project_documents(project_id: str, db: Session = Depends(get_db)):
     docs = (
@@ -98,8 +180,13 @@ def get_project_documents(project_id: str, db: Session = Depends(get_db)):
         for doc in docs
     ]
 
-# Returns all documents for the selected project and folder.
-# Document metadata includes status, color, size, and last modification timestamp for dashboard presentation.
+
+# NOTE: nested under /projects/{project_id}/... rather than the flat
+# /folders/{folder_id}/documents from the mock-up. Folder names like "Inne"
+# or "Elektryka" can repeat across different projects, so filtering on
+# folder name alone could mix documents from two projects together.
+# Scoping by both project_id and folder_id keeps each folder's documents
+# correctly isolated.
 @app.get("/projects/{project_id}/folders/{folder_id}/documents")
 def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)):
     docs = (
@@ -123,7 +210,7 @@ def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)
         for doc in docs
     ]
 
-# Returns all available document statuses used to populate status selection controls.
+
 @app.get("/statuses")
 def get_statuses(db: Session = Depends(get_db)):
     statuses = db.query(Status).order_by(Status.status_id).all()
@@ -132,8 +219,7 @@ def get_statuses(db: Session = Depends(get_db)):
         {"id": s.status_id, "name": s.status, "color": s.color} for s in statuses
     ]
 
-# Retrieves complete metadata for a single document.
-# Returns HTTP 404 if the requested document does not exist.
+
 @app.get("/documents/{document_id}")
 def get_document(document_id: str, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.document_id == document_id).first()
@@ -156,17 +242,20 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         "status": doc.status.status,
         "color": doc.status.color,
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
-        "kto_zatwierdzil": doc.kto_zatwierdzil,
+        "zatwierdzone": bool(doc.zatwierdzone),
+        "zatwierdzil": user_display_name(doc.user),
         "data_waznosci": doc.data_waznosci.isoformat() if doc.data_waznosci else None,
         "status_modified_at": doc.data_modyfikacji_statusu_dokumentu.isoformat()
         if doc.data_modyfikacji_statusu_dokumentu
         else None,
     }
 
+
 # Returns the archived history of a document - every prior state of its
-# status/rola_osoby_odpowiedzialnej/kto_zatwierdzil/data_waznosci, each with
+# status/rola_osoby_odpowiedzialnej/zatwierdzone/data_waznosci, each with
 # the time window it was valid for. Populated by the archive_document_version
-# trigger, not by application code - the app only ever writes the current row in `documents`.
+# trigger, not by application code - the app only ever writes the current
+# row in `documents`.
 @app.get("/documents/{document_id}/versions")
 def get_document_versions(document_id: str, db: Session = Depends(get_db)):
     versions = (
@@ -182,7 +271,8 @@ def get_document_versions(document_id: str, db: Session = Depends(get_db)):
             "status": v.status.status,
             "color": v.status.color,
             "rola_osoby_odpowiedzialnej": v.rola_osoby_odpowiedzialnej,
-            "kto_zatwierdzil": v.kto_zatwierdzil,
+            "zatwierdzone": bool(v.zatwierdzone),
+            "zatwierdzil": user_display_name(v.user),
             "data_waznosci": v.data_waznosci.isoformat() if v.data_waznosci else None,
             "start_dt": v.start_dt.isoformat() if v.start_dt else None,
             "end_dt": v.end_dt.isoformat() if v.end_dt else None,
@@ -190,7 +280,7 @@ def get_document_versions(document_id: str, db: Session = Depends(get_db)):
         for v in versions
     ]
 
-# Opens absolute path within the OS
+
 @app.post("/documents/{document_id}/open")
 def open_document(document_id: str, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.document_id == document_id).first()
@@ -215,29 +305,43 @@ def open_document(document_id: str, db: Session = Depends(get_db)):
 
     return {"opened": True}
 
-# Defines fields that can be updated through the API.
-# All fields are optional to support partial updates.
+
 class DocumentUpdate(BaseModel):
     status_id: int | None = None
     rola_osoby_odpowiedzialnej: str | None = None
-    kto_zatwierdzil: str | None = None
+    zatwierdzone: bool | None = None
     data_waznosci: date | None = None
 
-# Updates selected document attributes without replacing the entire record. Only provided fields are modified.
+
 @app.patch("/documents/{document_id}")
 def update_document(
-    document_id: str, payload: DocumentUpdate, db: Session = Depends(get_db)
+    document_id: str,
+    payload: DocumentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     doc = db.query(Document).filter(Document.document_id == document_id).first()
 
     if doc is None:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # exclude_unset means a field genuinely absent from the request body is left untouched,
-    # while a field explicitly sent as `null` (e.g. marking data_waznosci "nie dotyczy") really does clear it to NULL.
+    # exclude_unset means a field genuinely absent from the request body is
+    # left untouched, while a field explicitly sent as `null` (e.g. marking
+    # data_waznosci "nie dotyczy") really does clear it to NULL.
     updates = payload.model_dump(exclude_unset=True)
+
+    if "zatwierdzone" in updates:
+        updates["zatwierdzone"] = int(updates["zatwierdzone"])
+
     for field, value in updates.items():
         setattr(doc, field, value)
+
+    # Who made this change is never taken from the client - it's always the
+    # authenticated session, and only stamped when something actually
+    # changed (an empty PATCH shouldn't touch user_id or fire the
+    # archive/modification triggers).
+    if updates:
+        doc.user_id = current_user.user_id
 
     db.commit()
     db.refresh(doc)
@@ -249,7 +353,8 @@ def update_document(
         "status": doc.status.status,
         "color": doc.status.color,
         "rola_osoby_odpowiedzialnej": doc.rola_osoby_odpowiedzialnej,
-        "kto_zatwierdzil": doc.kto_zatwierdzil,
+        "zatwierdzone": bool(doc.zatwierdzone),
+        "zatwierdzil": user_display_name(doc.user),
         "data_waznosci": doc.data_waznosci.isoformat() if doc.data_waznosci else None,
         "status_modified_at": doc.data_modyfikacji_statusu_dokumentu.isoformat()
         if doc.data_modyfikacji_statusu_dokumentu

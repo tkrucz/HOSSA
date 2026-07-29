@@ -5,17 +5,13 @@ Komendy SQL do stworzenia bazy:
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+DROP TABLE IF EXISTS document_versions;
 DROP TABLE IF EXISTS documents;
-DROP TABLE IF EXISTS documents_versions;
 DROP TABLE IF EXISTS status;
+DROP TABLE IF EXISTS users;
 
-DROP INDEX IF EXISTS idx_document_versions_document_id;
-
-DROP FUNCTION IF EXISTS set_modification_dt;
-DROP FUNCTION IF EXISTS trg_set_modification_dt;
-
-DROP FUNCTION IF EXISTS archive_document_version;
-DROP FUNCTION IF EXISTS trg_archive_document_version;
+DROP FUNCTION IF EXISTS set_modification_dt CASCADE;
+DROP FUNCTION IF EXISTS archive_document_version CASCADE;
 
 CREATE TABLE status (
     status_id SMALLSERIAL PRIMARY KEY,
@@ -32,6 +28,20 @@ VALUES
 ('nie dotyczy', '440373'),
 ('wymaga zmian', 'E81033');
 
+CREATE TABLE users (
+    user_id SMALLSERIAL PRIMARY KEY,
+    user_name TEXT NOT NULL,
+    user_surname TEXT NOT NULL,
+    login TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL  -- always a bcrypt hash, set by the backend - never store plaintext
+);
+
+-- Placeholder account used for documents inserted by the filesystem sync job, which has no logged-in user.
+-- Its password hash is unusable ('!' is not a valid bcrypt hash) so nobody can actually log in as this account - it exists purely to satisfy documents.user_id NOT NULL.
+-- Look it up by login = 'system' in application code, never by hardcoding user_id.
+INSERT INTO users (user_name, user_surname, login, password)
+VALUES ('System', 'Synchronizacja', 'system', '!');
+
 CREATE TABLE documents (
     document_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     status_id SMALLINT NOT NULL DEFAULT 1,
@@ -45,15 +55,19 @@ CREATE TABLE documents (
     hash TEXT,
     source_ TEXT,
     rola_osoby_odpowiedzialnej TEXT,
-    kto_zatwierdzil TEXT,
+    zatwierdzone SMALLINT NOT NULL DEFAULT 0, -- 0 = not approved, 1 = approved
+    user_id SMALLINT NOT NULL DEFAULT 1, -- who last touched this row; sync uses the 'system' user (id 1 on a fresh DB, but always look it up by login)
     data_waznosci DATE,
-	start_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- start_dt, end_dt are attirbutes needed to navigate between the previous versions of documents
-	end_dt TIMESTAMP DEFAULT NULL,
-    data_modyfikacji_statusu_dokumentu TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- modyfikacja elementów statusu dokumentu
+    start_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_dt TIMESTAMP DEFAULT NULL,
+    data_modyfikacji_statusu_dokumentu TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_documents_status
         FOREIGN KEY (status_id)
-        REFERENCES status(status_id)
+        REFERENCES status(status_id),
+    CONSTRAINT fk_documents_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
 );
 
 CREATE TABLE document_versions (
@@ -61,27 +75,31 @@ CREATE TABLE document_versions (
     document_id UUID NOT NULL,
     status_id SMALLINT NOT NULL,
     rola_osoby_odpowiedzialnej TEXT,
-    kto_zatwierdzil TEXT,
+    zatwierdzone SMALLINT NOT NULL DEFAULT 0,
+    user_id SMALLINT NOT NULL, -- was referenced by a FK before but never declared as a column - added here
     data_waznosci DATE,
     start_dt TIMESTAMP NOT NULL,
     end_dt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT fk_document_versions_document
         FOREIGN KEY (document_id)
         REFERENCES documents(document_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_document_versions_status
         FOREIGN KEY (status_id)
-        REFERENCES status(status_id)
+        REFERENCES status(status_id),
+    CONSTRAINT fk_document_versions_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
 );
 
--- Helpful for "show me this document's history" queries.
 CREATE INDEX idx_document_versions_document_id ON document_versions(document_id);
 
 CREATE OR REPLACE FUNCTION set_modification_dt()
     RETURNS TRIGGER AS $$
     BEGIN
-	NEW.data_modyfikacji_statusu_dokumentu := CURRENT_TIMESTAMP;
-	RETURN NEW;
+    NEW.data_modyfikacji_statusu_dokumentu := CURRENT_TIMESTAMP;
+    RETURN NEW;
     END;
     $$ LANGUAGE plpgsql;
 
@@ -91,21 +109,21 @@ CREATE OR REPLACE TRIGGER trg_set_modification_dt
     WHEN (OLD.* IS DISTINCT FROM NEW.*)
     EXECUTE FUNCTION set_modification_dt();
 
--- Archives the OUTGOING row into document_versions whenever any of the fields change (e.g. status, rola_osoby_odpowiedzialnej, kto_zatwierdzil, data_waznosci).
--- Fields like hash/size_/data_zmiany_dokumentu (routine re-sync noise from the filesystem scanner) do NOT trigger a new version , only actual human-editable metadata changes do.
+-- Archives the OUTGOING row whenever status, rola_osoby_odpowiedzialnej, zatwierdzone, or data_waznosci change.
+-- Routine re-sync noise -- (hash/size_/data_zmiany_dokumentu/user_id-on-resync) does NOT trigger a new version.
 CREATE OR REPLACE FUNCTION archive_document_version()
     RETURNS TRIGGER AS $$
     BEGIN
         IF (
             OLD.status_id IS DISTINCT FROM NEW.status_id OR
             OLD.rola_osoby_odpowiedzialnej IS DISTINCT FROM NEW.rola_osoby_odpowiedzialnej OR
-            OLD.kto_zatwierdzil IS DISTINCT FROM NEW.kto_zatwierdzil OR
+            OLD.zatwierdzone IS DISTINCT FROM NEW.zatwierdzone OR
             OLD.data_waznosci IS DISTINCT FROM NEW.data_waznosci
         ) THEN
             INSERT INTO document_versions
-                (document_id, status_id, rola_osoby_odpowiedzialnej, kto_zatwierdzil, data_waznosci, start_dt, end_dt)
+                (document_id, status_id, rola_osoby_odpowiedzialnej, zatwierdzone, user_id, data_waznosci, start_dt, end_dt)
             VALUES
-                (OLD.document_id, OLD.status_id, OLD.rola_osoby_odpowiedzialnej, OLD.kto_zatwierdzil, OLD.data_waznosci, OLD.start_dt, CURRENT_TIMESTAMP);
+                (OLD.document_id, OLD.status_id, OLD.rola_osoby_odpowiedzialnej, OLD.zatwierdzone, OLD.user_id, OLD.data_waznosci, OLD.start_dt, CURRENT_TIMESTAMP);
 
             NEW.start_dt := CURRENT_TIMESTAMP;
         END IF;
@@ -114,13 +132,12 @@ CREATE OR REPLACE FUNCTION archive_document_version()
     END;
     $$ LANGUAGE plpgsql;
 
--- Runs BEFORE trg_set_modification_dt alphabetically ("archive" < "set"), so it sees OLD/NEW as the caller sent them,
--- before that trigger's own NEW mutation - order doesn't actually matter here since the two triggers touch different columns, but noting it for clarity.
 CREATE OR REPLACE TRIGGER trg_archive_document_version
     BEFORE UPDATE ON documents
     FOR EACH ROW
     WHEN (OLD.* IS DISTINCT FROM NEW.*)
     EXECUTE FUNCTION archive_document_version();
+
 
 Będąc w folderze HOSSA
 
