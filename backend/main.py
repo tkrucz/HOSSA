@@ -157,8 +157,7 @@ def get_folders(project_id: str, db: Session = Depends(get_db)):
 
 
 # Returns every document in a project, regardless of subfolder.
-# Used by the dashboard view, which matches documents to process-map boxes by exact name across
-# the whole project rather than one folder at a time.
+# Used by the dashboard view, which matches documents to process-map boxes by exact name across the whole project rather than one folder at a time.
 @app.get("/projects/{project_id}/documents")
 def get_project_documents(project_id: str, db: Session = Depends(get_db)):
     docs = (
@@ -182,8 +181,8 @@ def get_project_documents(project_id: str, db: Session = Depends(get_db)):
 
 
 # NOTE: nested under /projects/{project_id}/... rather than the flat
-# /folders/{folder_id}/documents from the mock-up.
-# Folder names like "Inne" or "Elektryka" can repeat across different projects, so filtering on folder name alone could mix documents from two projects together.
+# /folders/{folder_id}/documents from the mock-up. Folder names like "Inne" or "Elektryka" can repeat across different projects,
+# so filtering on folder name alone could mix documents from two projects together.
 # Scoping by both project_id and folder_id keeps each folder's documents correctly isolated.
 @app.get("/projects/{project_id}/folders/{folder_id}/documents")
 def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)):
@@ -250,8 +249,8 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
 
 
 # Returns the archived history of a document - every prior state of its status/rola_osoby_odpowiedzialnej/zatwierdzone/data_waznosci,
-# each with the time window it was valid for. Populated by the archive_document_version trigger, not by application code
-# - the app only ever writes the current row in `documents.
+# each with the time window it was valid for.
+# Populated by the archive_document_version trigger, not by application code - the app only ever writes the current row in `documents`.
 @app.get("/documents/{document_id}/versions")
 def get_document_versions(document_id: str, db: Session = Depends(get_db)):
     versions = (
@@ -305,7 +304,6 @@ def open_document(document_id: str, db: Session = Depends(get_db)):
 class DocumentUpdate(BaseModel):
     status_id: int | None = None
     rola_osoby_odpowiedzialnej: str | None = None
-    zatwierdzone: bool | None = None
     data_waznosci: date | None = None
 
 
@@ -321,20 +319,21 @@ def update_document(
     if doc is None:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # exclude_unset means a field genuinely absent from the request body is left untouched, while a field explicitly
-    # sent as `null` (e.g. marking data_waznosci "nie dotyczy") really does clear it to NULL.
+    # exclude_unset means a field genuinely absent from the request body is left untouched,
+    # while a field explicitly sent as `null` (e.g. marking data_waznosci "nie dotyczy") really does clear it to NULL.
     updates = payload.model_dump(exclude_unset=True)
-
-    if "zatwierdzone" in updates:
-        updates["zatwierdzone"] = int(updates["zatwierdzone"])
 
     for field, value in updates.items():
         setattr(doc, field, value)
 
-    # Who made this change is never taken from the client - it's always the authenticated session, and only stamped when something actually
-    # changed (an empty PATCH shouldn't touch user_id or fire the archive/modification triggers).
+    # Who made this change is never taken from the client - it's always the authenticated session,
+    # and only stamped when something actually changed (an empty PATCH shouldn't touch user_id or fire the archive/modification triggers).
     if updates:
         doc.user_id = current_user.user_id
+
+    # zatwierdzone is fully derived from the current status - never settable directly by the client.
+    # Recomputed every save so it can never drift out of sync with status_id, however that field ended up changing.
+    doc.zatwierdzone = 1 if doc.status.status == "zatwierdzony" else 0
 
     db.commit()
     db.refresh(doc)

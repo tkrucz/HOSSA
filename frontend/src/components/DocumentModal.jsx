@@ -8,7 +8,6 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
   const [statuses, setStatuses] = useState([]);
   const [statusId, setStatusId] = useState("");
   const [rola, setRola] = useState("");
-  const [zatwierdzone, setZatwierdzone] = useState(false);
   const [dataWaznosci, setDataWaznosci] = useState("");
   const [nieDotyczy, setNieDotyczy] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -41,7 +40,6 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
         setStatuses(statusList);
         setStatusId(docData.status_id);
         setRola(docData.rola_osoby_odpowiedzialnej || "");
-        setZatwierdzone(Boolean(docData.zatwierdzone));
         setDataWaznosci(docData.data_waznosci || "");
         setNieDotyczy(!docData.data_waznosci);
       })
@@ -64,7 +62,6 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
       body: JSON.stringify({
         status_id: statusId,
         rola_osoby_odpowiedzialnej: rola,
-        zatwierdzone,
         data_waznosci: nieDotyczy ? null : dataWaznosci || null,
       }),
     })
@@ -147,6 +144,9 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
 
               <dt>Ostatnio zmienił</dt>
               <dd>{doc.zatwierdzil || "-"}</dd>
+
+              <dt>Zatwierdzone</dt>
+              <dd>{doc.zatwierdzone ? "Tak" : "Nie"}</dd>
             </dl>
 
             <button
@@ -223,15 +223,6 @@ export default function DocumentModal({ documentId, onClose, onSaved }) {
                 value={rola}
                 onChange={(e) => setRola(e.target.value)}
               />
-            </label>
-
-            <label className="modal-checkbox modal-field">
-              <input
-                type="checkbox"
-                checked={zatwierdzone}
-                onChange={(e) => setZatwierdzone(e.target.checked)}
-              />
-              Zatwierdzone
             </label>
 
             <div className="modal-field">
