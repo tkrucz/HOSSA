@@ -3,6 +3,7 @@ export const BOX_HEIGHT = 70;
 export const ROW_GAP = 90;
 export const COL_GAP = 220;
 
+// Variables to calculate in which row, column place a document block
 const ROW = (n) => n * ROW_GAP
 const COL = (n) => n * COL_GAP
 
@@ -34,7 +35,7 @@ export const SHARED_BOXES = [
   { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
   { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
 
-  // "Dane do warunków" fan-out
+  // "Dane do warunków"
   { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(2) },
   { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: COL(3), y: ROW(2) },
   { id: "dane_do_war_cieplo", label: "Dane do Warunków- Ciepło", x: COL(3), y: ROW(3) },
@@ -49,9 +50,11 @@ export const SHARED_BOXES = [
   { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(9) },
 ];
 
-// Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages. y` is relative to that building's own block;
+// Per-building template. `
+// x` is the stage column - shared across all buildings, since every building goes through the same process stages.
+// y` is relative to that building's own block;
 // buildDashboardGraph() offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
-// Columns start one step right of each building's anchor box at x = ANCHOR_X)
+// Columns start one step right of each building's anchor box at x = ANCHOR_X
 export const BUILDING_BOX_TEMPLATE = [
   { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: COL(3), y: ROW(0) },
   { id: "geodezja", suffix: "Geodezja", x: COL(3), y: ROW(1) },
@@ -84,8 +87,8 @@ export const BUILDING_BOX_TEMPLATE = [
 ];
 
 // Template edges among SHARED boxes and among BUILDING_BOX_TEMPLATE boxes.
-// Edges connecting koncepcja_wstepna to each building's anchor, and each anchor to its own mapa_cel/geodezja/koncepcja_arch, are generated
-// separately in buildDashboardGraph() below - they're not "template ids", they're synthetic per-building nodes.
+// Edges connecting koncepcja_wstepna to each building's anchor, and each anchor to its own mapa_cel/geodezja/koncepcja_arch.
+// They are generated separately in buildDashboardGraph() below- they're not "template ids", they're synthetic per-building nodes.
 export const EDGE_TEMPLATE = [
   ["mapa_dc", "koncepcja_wstepna"],
   ["domiary", "koncepcja_wstepna"],
@@ -139,8 +142,8 @@ export function buildLabel(building, suffix) {
 }
 
 // Looks at the actual documents fetched for a project and figures out which building names are present,
-// by finding doc names that end with "{BUILDING_SEPARATOR}{known stage suffix}". Returns a sorted,
-// deduped list - no manual configuration needed.
+// by finding doc names that end with "{BUILDING_SEPARATOR}{known stage suffix}".
+// Returns a sorted, deduped list - no manual configuration needed.
 export function discoverBuildings(docs) {
   const names = new Set();
 

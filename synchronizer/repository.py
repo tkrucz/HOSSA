@@ -1,9 +1,7 @@
 from synchronizer.document import Document
 
-# When a document already exists and is re-synced (i.e. the file is still
-# there), its status auto-advances from "brak" to this value - but only
-# from "brak". Any other status (including this one) means an employee has
-# already started working with it, so re-syncing must never touch it again.
+# When a document already exists and is re-synced (i.e. the file is still there), its status auto-advances from "brak" to "w trakcie przygotowania".
+# Any other status (including this one) means an employee has already started working with it, so re-syncing must never touch it again.
 AUTO_ADVANCE_FROM = "brak"
 AUTO_ADVANCE_TO = "w trakcie przygotowania"
 
@@ -73,16 +71,12 @@ class DocumentRepository:
             ELSE documents.status_id
         END
         """
-        # A brand new file has no `documents` row yet, so it takes the
-        # table's own DEFAULT (status_id 1 / "brak") - nothing to set here.
-        # Only the ON CONFLICT branch (the file already existed and is
-        # being re-synced) auto-advances "brak" -> "w trakcie przygotowania",
-        # and only when it's still exactly "brak". Any status an employee
-        # picked manually is preserved on every future sync.
-        #
-        # user_id is intentionally absent from DO UPDATE SET - re-syncing
-        # must never overwrite who a human last set on this document; only
-        # a brand-new row gets user_id = the "system" placeholder account.
+        # A brand new file has no `documents` row yet, so it takes the table's own DEFAULT (status_id 1 / "brak") - nothing to set here.
+        # Only the ON CONFLICT branch (the file already existed and is being re-synced) auto-advances "brak" -> "w trakcie przygotowania",
+        # and only when it's still exactly "brak". Any status an employee picked manually is preserved on every future sync.
+
+        # user_id is intentionally absent from DO UPDATE SET - re-syncing must never overwrite who a human last set on this document;
+        # only a brand-new row gets user_id = the "system" placeholder account.
 
         cursor.execute(
             query,
