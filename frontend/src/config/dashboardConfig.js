@@ -1,85 +1,86 @@
 export const BOX_WIDTH = 150;
 export const BOX_HEIGHT = 70;
-export const COL_GAP = 220;
 export const ROW_GAP = 90;
+export const COL_GAP = 220;
+
+const ROW = (n) => n * ROW_GAP
+const COL = (n) => n * COL_GAP
 
 // Vertical space reserved for one building's whole row-block.
 export const BUILDING_BLOCK_HEIGHT = 4 * ROW_GAP + 60;
 
 // Buildings start below all the shared "intro" content (input boxes,
 // Warunki usunięcia kolizji chain, Dane do warunków fan-out) so nothing overlaps regardless of how tall that shared content is.
-export const BUILDING_Y_BASE = 600;
+export const BUILDING_Y_BASE = ROW(10);
 
 // Column each building's anchor box sits in - one step right of
 // "Koncepcja Wstępna", one step left of the building's own mapa_cel/geodezja/koncepcja_arch fan-out.
-export const ANCHOR_X = 440;
+export const ANCHOR_X = COL(2);
 
 // Convention used to derive a building name from a document name, e.g.
 // "Budynek A - Mapa do celów Projektu" -> building "Budynek A".
 const BUILDING_SEPARATOR = " - ";
 
-// Shared, single-instance boxes - one per whole project, regardless of how
-// many buildings it has.
+// Shared, single-instance boxes - one per whole project, regardless of how many buildings it has.
 export const SHARED_BOXES = [
-  { id: "mapa_dc", label: "Mapa DC. Informacyjna", x: 0, y: 0 },
-  { id: "domiary", label: "Domiary granic, drzew", x: 0, y: 90 },
-  { id: "osiedle", label: "Osiedle/Teren PZUP", x: 0, y: 180 },
+  { id: "mapa_dc", label: "Mapa DC. Informacyjna", x: COL(0), y: ROW(0) },
+  { id: "domiary", label: "Domiary granic, drzew", x: COL(0), y: ROW(1) },
+  { id: "osiedle", label: "Osiedle/Teren PZUP", x: COL(0), y: ROW(2) },
 
-  { id: "koncepcja_wstepna", label: "Koncepcja Wstępna", x: 220, y: 90 },
+  { id: "koncepcja_wstepna", label: "Koncepcja Wstępna", x: COL(1), y: ROW(1) },
 
   // "Warunki usunięcia kolizji -> Projekt -> Uzgodnienia" chain
-  { id: "war_usun_kolizji", label: "Warunki usunięcia kolizji", x: 440, y: 0 },
-  { id: "proj_war_usun_kolizji", label: "Projekt", x: 660, y: 0 },
-  { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: 880, y: 0 },
+  { id: "war_usun_kolizji", label: "Warunki usunięcia kolizji", x: COL(2), y: ROW(0) },
+  { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
+  { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
 
   // "Dane do warunków" fan-out
-  { id: "dane_do_war", label: "Dane do warunków", x: 440, y: 180 },
-  { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: 660, y: 180 },
-  { id: "dane_do_war_cieplo", label: "Dane do Warunków- Ciepło", x: 660, y: 270 },
-  { id: "dane_do_war_elektryka", label: "Dane do Warunków- Elektryka", x: 660, y: 360 },
-  { id: "dane_do_war_deszcz", label: "Dane do Warunków- Deszczówka", x: 660, y: 450 },
+  { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(2) },
+  { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: COL(3), y: ROW(2) },
+  { id: "dane_do_war_cieplo", label: "Dane do Warunków- Ciepło", x: COL(3), y: ROW(3) },
+  { id: "dane_do_war_elektryka", label: "Dane do Warunków- Elektryka", x: COL(3), y: ROW(4) },
+  { id: "dane_do_war_deszcz", label: "Dane do Warunków- Deszczówka", x: COL(3), y: ROW(5) },
 
   // "Koncepcja Wstępna" -> "Plan Zagospodarowania Terenu" -> Umowy Branżowe
-  { id: "pzt_podklad", label: "Plan Zagospodarowania Terenu", x: 440, y: 290 },
-  { id: "um_brnz_deszcz", label: "Umowy Branżowe- Deszczówka", x: 880, y: 400 },
-  { id: "um_brnz_woda", label: "Umowy Branżowe- Woda", x: 880, y: 490 },
-  { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: 880, y: 580 },
-  { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: 880, y: 670 },
+  { id: "pzt_podklad", label: "Plan Zagospodarowania Terenu", x: COL(2), y: ROW(6) },
+  { id: "um_brnz_deszcz", label: "Umowy Branżowe- Deszczówka", x: COL(3), y: ROW(6) },
+  { id: "um_brnz_woda", label: "Umowy Branżowe- Woda", x: COL(3), y: ROW(7) },
+  { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: COL(3), y: ROW(8) },
+  { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(9) },
 ];
 
 // Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages. y` is relative to that building's own block;
 // buildDashboardGraph() offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
-// Columns start at x = 660 (one step right of each building's anchor box at x = ANCHOR_X).
+// Columns start one step right of each building's anchor box at x = ANCHOR_X)
 export const BUILDING_BOX_TEMPLATE = [
-  { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: 660, y: 0 },
-  { id: "geodezja", suffix: "Geodezja", x: 660, y: 90 },
-  { id: "koncepcja_arch", suffix: "Koncepcja Architektury Budynku", x: 660, y: 180 },
+  { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: COL(3), y: ROW(0) },
+  { id: "geodezja", suffix: "Geodezja", x: COL(3), y: ROW(1) },
+  { id: "koncepcja_arch", suffix: "Koncepcja Architektury Budynku", x: COL(3), y: ROW(2) },
 
-  { id: "odbior2", suffix: "Odbiór koncepcji architektury budynku", x: 880, y: 180 },
+  { id: "odbior2", suffix: "Odbiór koncepcji architektury budynku", x: COL(4), y: ROW(2) },
 
-  { id: "wentylacje", suffix: "Umowa Branżowa- wentylacje", x: 1100, y: 0 },
-  { id: "woda", suffix: "Umowa Branżowa- woda kanalizacyjna CO", x: 1100, y: 90 },
-  { id: "nn", suffix: "Umowa Branżowa- NN", x: 1100, y: 180 },
-  { id: "konstrukcja", suffix: "Umowa Branżowa- konstrukcja", x: 1100, y: 270 },
+  { id: "wentylacje", suffix: "Umowa Branżowa- wentylacje", x: COL(5), y: ROW(0) },
+  { id: "woda", suffix: "Umowa Branżowa- woda kanalizacyjna CO", x: COL(5), y: ROW(1) },
+  { id: "nn", suffix: "Umowa Branżowa- NN", x: COL(5), y: ROW(2) },
+  { id: "konstrukcja", suffix: "Umowa Branżowa- konstrukcja", x: COL(5), y: ROW(3) },
 
-  { id: "pt_went", suffix: "PT wentylacji", x: 1320, y: 0 },
-  { id: "pt_woda", suffix: "PT wody kan. CO", x: 1320, y: 90 },
-  { id: "pt_elektryki", suffix: "PT elektryki", x: 1320, y: 180 },
-  { id: "pt_konstr", suffix: "PT Konstrukcji", x: 1320, y: 270 },
+  { id: "pt_went", suffix: "PT wentylacji", x: COL(6), y: ROW(0) },
+  { id: "pt_woda", suffix: "PT wody kan. CO", x: COL(6), y: ROW(1) },
+  { id: "pt_elektryki", suffix: "PT elektryki", x: COL(6), y: ROW(2) },
+  { id: "pt_konstr", suffix: "PT Konstrukcji", x: COL(6), y: ROW(3) },
 
-  { id: "sprawdzenie_pt", suffix: "Sprawdzenie planów technicznych", x: 1540, y: 135 },
+  { id: "sprawdzenie_pt", suffix: "Sprawdzenie planów technicznych", x: COL(7), y: ROW(1.5) },
 
-  { id: "pt_went_final", suffix: "PT wentylacji po sprawdzeniu", x: 1760, y: 0 },
-  { id: "pt_woda_final", suffix: "PT wody kanalizacyjnej po sprawdzeniu", x: 1760, y: 90 },
-  { id: "pt_elektryki_final", suffix: "PT elektryki po sprawdzeniu", x: 1760, y: 180 },
-  { id: "pt_konstr_final", suffix: "PT Konstrukcji po sprawdzeniu", x: 1760, y: 270 },
+  { id: "pt_went_final", suffix: "PT wentylacji po sprawdzeniu", x: COL(8), y: ROW(0) },
+  { id: "pt_woda_final", suffix: "PT wody kanalizacyjnej po sprawdzeniu", x: COL(8), y: ROW(1) },
+  { id: "pt_elektryki_final", suffix: "PT elektryki po sprawdzeniu", x: COL(8), y: ROW(2) },
+  { id: "pt_konstr_final", suffix: "PT Konstrukcji po sprawdzeniu", x: COL(8), y: ROW(3) },
 
-  { id: "pab", suffix: "Plan Architektury Budynku", x: 1980, y: 90 },
-  { id: "rzeczoznawca", suffix: "Rzeczoznawca", x: 1980, y: 180 },
+  { id: "pab", suffix: "Plan Architektury Budynku", x: COL(9), y: ROW(1.5) },
 
-  { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: 2200, y: 135 },
+  { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: COL(10), y: ROW(1.5) },
 
-  { id: "odbior3", suffix: "Odbiór planu architektury budynku", x: 2420, y: 135 },
+  { id: "odbior3", suffix: "Odbiór planu architektury budynku", x: COL(11), y: ROW(1.5) },
 ];
 
 // Template edges among SHARED boxes and among BUILDING_BOX_TEMPLATE boxes.
@@ -127,8 +128,7 @@ export const EDGE_TEMPLATE = [
   ["pt_woda_final", "pab"],
   ["pt_elektryki_final", "pab"],
   ["pt_konstr_final", "pab"],
-  ["pab", "rzeczoznawca"],
-  ["rzeczoznawca", "pw_podkladow"],
+  ["pab", "pw_podkladow"],
   ["pw_podkladow", "odbior3"],
 ];
 
