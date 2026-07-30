@@ -3,9 +3,9 @@ export const BOX_HEIGHT = 70;
 export const ROW_GAP = 90;
 export const COL_GAP = 220;
 
-// Variables to calculate in which row, column place a document block
-const ROW = (n) => n * ROW_GAP
-const COL = (n) => n * COL_GAP
+// Helpers to place a box by row/column index instead of raw pixel numbers.
+const ROW = (n) => n * ROW_GAP;
+const COL = (n) => n * COL_GAP;
 
 // Vertical space reserved for one building's whole row-block.
 export const BUILDING_BLOCK_HEIGHT = 4 * ROW_GAP + 60;
@@ -17,10 +17,6 @@ export const BUILDING_Y_BASE = ROW(10);
 // Column each building's anchor box sits in - one step right of
 // "Koncepcja Wstępna", one step left of the building's own mapa_cel/geodezja/koncepcja_arch fan-out.
 export const ANCHOR_X = COL(2);
-
-// Convention used to derive a building name from a document name, e.g.
-// "Budynek A - Mapa do celów Projektu" -> building "Budynek A".
-const BUILDING_SEPARATOR = " - ";
 
 // Shared, single-instance boxes - one per whole project, regardless of how many buildings it has.
 export const SHARED_BOXES = [
@@ -35,7 +31,7 @@ export const SHARED_BOXES = [
   { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
   { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
 
-  // "Dane do warunków"
+  // "Dane do warunków" fan-out
   { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(2) },
   { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: COL(3), y: ROW(2) },
   { id: "dane_do_war_cieplo", label: "Dane do Warunków- Ciepło", x: COL(3), y: ROW(3) },
@@ -50,11 +46,9 @@ export const SHARED_BOXES = [
   { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(9) },
 ];
 
-// Per-building template. `
-// x` is the stage column - shared across all buildings, since every building goes through the same process stages.
-// y` is relative to that building's own block;
-// buildDashboardGraph() offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
-// Columns start one step right of each building's anchor box at x = ANCHOR_X
+// Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages.
+// `y` is relative to that building's own block; buildDashboardGraph() offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
+// Columns start one step right of each building's anchor box at x = ANCHOR_X.
 export const BUILDING_BOX_TEMPLATE = [
   { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: COL(3), y: ROW(0) },
   { id: "geodezja", suffix: "Geodezja", x: COL(3), y: ROW(1) },
@@ -87,8 +81,8 @@ export const BUILDING_BOX_TEMPLATE = [
 ];
 
 // Template edges among SHARED boxes and among BUILDING_BOX_TEMPLATE boxes.
-// Edges connecting koncepcja_wstepna to each building's anchor, and each anchor to its own mapa_cel/geodezja/koncepcja_arch.
-// They are generated separately in buildDashboardGraph() below- they're not "template ids", they're synthetic per-building nodes.
+// Edges connecting koncepcja_wstepna to each building's anchor, and each anchor to its own mapa_cel/geodezja/koncepcja_arch,
+// are generated separately in buildDashboardGraph() below - they're not "template ids", they're synthetic per-building nodes.
 export const EDGE_TEMPLATE = [
   ["mapa_dc", "koncepcja_wstepna"],
   ["domiary", "koncepcja_wstepna"],
@@ -137,31 +131,27 @@ export const EDGE_TEMPLATE = [
 
 const REPEATABLE_IDS = new Set(BUILDING_BOX_TEMPLATE.map((t) => t.id));
 
-export function buildLabel(building, suffix) {
-  return `${building}${BUILDING_SEPARATOR}${suffix}`;
-}
-
-// Looks at the actual documents fetched for a project and figures out which building names are present,
-// by finding doc names that end with "{BUILDING_SEPARATOR}{known stage suffix}".
-// Returns a sorted, deduped list - no manual configuration needed.
+// Buildings are just the folder names present in this project's documents (e.g. a file under "Projekt 1\Budynek A\..." belongs to building "Budynek A") -
+// the same `folder` value the regular folder-browsing view already uses. Returns a sorted, deduped list of every distinct folder that has at least one document in it.
+//
+// Caveat: this treats every subfolder in the project as "a building". If a project ever mixes building folders with other kinds of folders
+// (e.g. a flat "Architektura"/"Konstrukcja" layout with no buildings at all),
+// this would show every one of those as a building block too.
 export function discoverBuildings(docs) {
   const names = new Set();
 
   docs.forEach((doc) => {
-    BUILDING_BOX_TEMPLATE.forEach((template) => {
-      const marker = `${BUILDING_SEPARATOR}${template.suffix}`;
-      if (doc.name && doc.name.endsWith(marker)) {
-        names.add(doc.name.slice(0, doc.name.length - marker.length));
-      }
-    });
+    if (doc.folder) names.add(doc.folder);
   });
 
   return Array.from(names).sort();
 }
 
 // Builds the full box + edge list for a given list of building names.
-// Each building gets: one anchor box (id `anchor::{building}`, a purely visual node - not matched to any document),
-// plus one box per BUILDING_BOX_TEMPLATE entry.
+// Each building gets: one anchor box (id `anchor::{building}`, a purely visual node - not matched to any document), plus one box per
+// BUILDING_BOX_TEMPLATE entry. Box `label` is just the stage name - building context comes from the anchor box and vertical grouping,
+// not a text prefix. `suffix`/`building` are kept on each box so the page can match it against real documents
+// (any doc in that building's folder whose name equals or starts with "{suffix} - ").
 export function buildDashboardGraph(buildings) {
   const boxes = [...SHARED_BOXES];
   const edges = [];
@@ -183,7 +173,8 @@ export function buildDashboardGraph(buildings) {
     BUILDING_BOX_TEMPLATE.forEach((template) => {
       boxes.push({
         id: `${template.id}::${building}`,
-        label: buildLabel(building, template.suffix),
+        label: template.suffix,
+        suffix: template.suffix,
         x: template.x,
         y: template.y + yOffset,
         building,

@@ -1,16 +1,50 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import DocumentModal from "../components/DocumentModal";
+import DocumentPickerModal from "../components/DocumentPickerModal";
 import { API_URL } from "../api";
 import { STATUS_LEGEND } from "../statusLegend";
 import {
   BOX_WIDTH,
   BOX_HEIGHT,
+  BUILDING_BOX_TEMPLATE,
   discoverBuildings,
   buildDashboardGraph,
 } from "../config/dashboardConfig";
 
 const DEFAULT_COLOR = "9E9D9B"; // "brak" - no matching document found
+
+// True if `name` starts with `suffix` AND the next character (if any) isn't
+// a letter/digit - so "Geodezja (Robocza)" and "Geodezja - X" both count as
+// matching "Geodezja", but "GeodezjaAnnex" does not.
+const WORD_CHAR = /[a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/;
+function isPrefixMatch(name, suffix) {
+  if (!name.startsWith(suffix)) return false;
+  const nextChar = name.charAt(suffix.length);
+  return nextChar === "" || !WORD_CHAR.test(nextChar);
+}
+
+// When several documents match one box, this decides which status "wins"
+// for the box's fill color - most-needs-attention first, so a single
+// problem document isn't hidden behind others that are further along.
+const STATUS_PRIORITY = [
+  "wymaga zmian",
+  "w trakcie przygotowania",
+  "brak",
+  "przygotowany",
+  "zatwierdzony",
+  "nie dotyczy",
+];
+
+function pickRepresentative(matches) {
+  if (matches.length === 0) return null;
+
+  return matches.reduce((best, doc) => {
+    const bestRank = STATUS_PRIORITY.indexOf(best.status);
+    const rank = STATUS_PRIORITY.indexOf(doc.status);
+    return rank !== -1 && (bestRank === -1 || rank < bestRank) ? doc : best;
+  }, matches[0]);
+}
 
 function wrapLabel(label) {
   const words = label.split(" ");
@@ -35,6 +69,7 @@ export default function DashboardPage() {
   const { projectId } = useParams();
   const [docs, setDocs] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [pickerDocs, setPickerDocs] = useState(null);
 
   const loadDocs = () => {
     fetch(`${API_URL}/projects/${projectId}/documents`)
@@ -45,7 +80,8 @@ export default function DashboardPage() {
 
   useEffect(loadDocs, [projectId]);
 
-  // Exact doc_name -> document lookup.
+  // Exact doc_name -> document lookup, used for SHARED_BOXES only (those
+  // aren't scoped to a building/folder).
   const docsByName = useMemo(() => {
     const map = {};
     docs.forEach((doc) => {
@@ -54,10 +90,9 @@ export default function DashboardPage() {
     return map;
   }, [docs]);
 
-  // Which buildings actually exist, discovered from real document names
-  // (see discoverBuildings() in dashboardConfig.js), then the box/edge
-  // graph is generated to fit exactly that many buildings - no fixed
-  // layout, it grows or shrinks with the data.
+  // Buildings are discovered from folder names present in the project's
+  // documents (see discoverBuildings() in dashboardConfig.js) - the graph
+  // is generated to fit exactly that many, growing or shrinking with data.
   const buildings = useMemo(() => discoverBuildings(docs), [docs]);
 
   const { boxes, edges } = useMemo(
@@ -72,6 +107,54 @@ export default function DashboardPage() {
     });
     return map;
   }, [boxes]);
+
+  // Assigns every document (within a building's folder) to the box whose
+  // stage suffix is the LONGEST matching prefix of its name - so
+  // "PT wentylacji po sprawdzeniu ..." goes to that box specifically,
+  // rather than also matching the shorter "PT wentylacji" box. Computed
+  // once for the whole project rather than independently per box.
+  const docsByBoxId = useMemo(() => {
+    const map = {};
+
+    docs.forEach((doc) => {
+      if (!doc.folder) return;
+
+      let best = null;
+      BUILDING_BOX_TEMPLATE.forEach((template) => {
+        if (
+          isPrefixMatch(doc.name, template.suffix) &&
+          (!best || template.suffix.length > best.suffix.length)
+        ) {
+          best = template;
+        }
+      });
+
+      if (!best) return;
+
+      const boxId = `${best.id}::${doc.folder}`;
+      (map[boxId] ||= []).push(doc);
+    });
+
+    return map;
+  }, [docs]);
+
+  // For a per-building box, use the global assignment above. SHARED_BOXES
+  // aren't scoped to a folder, so they still match by exact doc_name.
+  const matchesFor = (box) => {
+    if (box.isAnchor) return [];
+    if (box.building) return docsByBoxId[box.id] || [];
+
+    const doc = docsByName[box.label];
+    return doc ? [doc] : [];
+  };
+
+  const handleBoxClick = (matches) => {
+    if (matches.length === 1) {
+      setSelectedId(matches[0].id);
+    } else {
+      setPickerDocs(matches);
+    }
+  };
 
   const canvasWidth =
     (boxes.length ? Math.max(...boxes.map((b) => b.x)) : 0) + BOX_WIDTH + 40;
@@ -98,7 +181,7 @@ export default function DashboardPage() {
       {buildings.length === 0 && (
         <p className="dashboard-hint">
           Nie wykryto jeszcze żadnego budynku - pojawi się tu, gdy w projekcie
-          znajdzie się dokument nazwany np. "Budynek A - Geodezja".
+          znajdzie się folder z dokumentami, np. "Projekt 1\Budynek A\...".
         </p>
       )}
 
@@ -128,16 +211,17 @@ export default function DashboardPage() {
           })}
 
           {boxes.map((box) => {
-            const doc = box.isAnchor ? null : docsByName[box.label];
-            const color = doc ? doc.color : DEFAULT_COLOR;
+            const matches = matchesFor(box);
+            const representative = pickRepresentative(matches);
+            const color = representative ? representative.color : DEFAULT_COLOR;
             const lines = wrapLabel(box.label);
-            const clickable = Boolean(doc);
+            const clickable = matches.length > 0;
 
             return (
               <g
                 key={box.id}
                 transform={`translate(${box.x}, ${box.y})`}
-                onClick={clickable ? () => setSelectedId(doc.id) : undefined}
+                onClick={clickable ? () => handleBoxClick(matches) : undefined}
                 className={
                   box.isAnchor
                     ? "dashboard-box anchor"
@@ -151,10 +235,28 @@ export default function DashboardPage() {
                   height={BOX_HEIGHT}
                   rx="8"
                   fill={box.isAnchor ? "#ffffff" : `#${color}`}
-                  stroke={box.isAnchor ? "#1f2430" : "#1f2430"}
+                  stroke="#1f2430"
                   strokeWidth={box.isAnchor ? "2" : "1"}
                   strokeOpacity={box.isAnchor ? "0.6" : "0.15"}
                 />
+                {!box.isAnchor && matches.length > 1 && (
+                  <circle
+                    cx={BOX_WIDTH - 10}
+                    cy={10}
+                    r="9"
+                    fill="#1f2430"
+                  />
+                )}
+                {!box.isAnchor && matches.length > 1 && (
+                  <text
+                    x={BOX_WIDTH - 10}
+                    y={13}
+                    textAnchor="middle"
+                    className="dashboard-box-count"
+                  >
+                    {matches.length}
+                  </text>
+                )}
                 <text
                   x={BOX_WIDTH / 2}
                   y={BOX_HEIGHT / 2 - ((lines.length - 1) * 12) / 2 + 4}
@@ -188,6 +290,15 @@ export default function DashboardPage() {
           </span>
         ))}
       </div>
+
+      <DocumentPickerModal
+        docs={pickerDocs}
+        onClose={() => setPickerDocs(null)}
+        onSelect={(id) => {
+          setPickerDocs(null);
+          setSelectedId(id);
+        }}
+      />
 
       <DocumentModal
         documentId={selectedId}

@@ -157,11 +157,15 @@ def get_folders(project_id: str, db: Session = Depends(get_db)):
 
 
 # Returns every document in a project, regardless of subfolder.
-# Used by the dashboard view, which matches documents to process-map boxes by exact name across the whole project rather than one folder at a time.
+# Used by the dashboard view. Each document includes its `folder` (the second segment of relative_path)
+# - the dashboard treats a document's folder as its building (e.g. a file in "Projekt 1\Budynek A\..." belongs to "Budynek A"),
+# and matches it to a process-map box by name within that folder rather than by a "Budynek A - " filename prefix.
 @app.get("/projects/{project_id}/documents")
 def get_project_documents(project_id: str, db: Session = Depends(get_db)):
+    folder_expr = func.split_part(Document.relative_path, PATH_SEP, 2)
+
     docs = (
-        db.query(Document)
+        db.query(Document, folder_expr.label("folder"))
         .filter(func.split_part(Document.relative_path, PATH_SEP, 1) == project_id)
         .all()
     )
@@ -170,13 +174,14 @@ def get_project_documents(project_id: str, db: Session = Depends(get_db)):
         {
             "id": str(doc.document_id),
             "name": doc.doc_name,
+            "folder": folder,
             "extension": doc.extension_,
             "status": doc.status.status,
             "color": doc.status.color,
             "size": doc.size_,
             "modified_at": doc.data_zmiany_dokumentu.isoformat() if doc.data_zmiany_dokumentu else None,
         }
-        for doc in docs
+        for doc, folder in docs
     ]
 
 
@@ -248,9 +253,11 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
     }
 
 
-# Returns the archived history of a document - every prior state of its status/rola_osoby_odpowiedzialnej/zatwierdzone/data_waznosci,
-# each with the time window it was valid for.
-# Populated by the archive_document_version trigger, not by application code - the app only ever writes the current row in `documents`.
+# Returns the archived history of a document - every prior state of its
+# status/rola_osoby_odpowiedzialnej/zatwierdzone/data_waznosci, each with
+# the time window it was valid for. Populated by the archive_document_version
+# trigger, not by application code - the app only ever writes the current
+# row in `documents`.
 @app.get("/documents/{document_id}/versions")
 def get_document_versions(document_id: str, db: Session = Depends(get_db)):
     versions = (
