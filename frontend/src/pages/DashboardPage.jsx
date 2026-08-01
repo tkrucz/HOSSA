@@ -7,6 +7,7 @@ import { STATUS_LEGEND } from "../statusLegend";
 import {
   BOX_WIDTH,
   BOX_HEIGHT,
+  SHARED_BOXES,
   BUILDING_BOX_TEMPLATE,
   discoverBuildings,
   buildDashboardGraph,
@@ -80,13 +81,31 @@ export default function DashboardPage() {
 
   useEffect(loadDocs, [projectId]);
 
-  // Exact doc_name -> document lookup, used for SHARED_BOXES only (those
-  // aren't scoped to a building/folder).
-  const docsByName = useMemo(() => {
+  // Assigns every document to the SHARED_BOXES entry whose label is the
+  // LONGEST matching prefix of its name - same idea as docsByBoxId below,
+  // but for boxes that aren't scoped to a building/folder (e.g.
+  // "Plan Zagospodarowania Terenu" and "Plan Zagospodarowania Terenu
+  // Konserwator" both resolve to the same box instead of the second one
+  // being invisible).
+  const docsBySharedBoxId = useMemo(() => {
     const map = {};
+
     docs.forEach((doc) => {
-      map[doc.name] = doc;
+      let best = null;
+      SHARED_BOXES.forEach((box) => {
+        if (
+          isPrefixMatch(doc.name, box.label) &&
+          (!best || box.label.length > best.label.length)
+        ) {
+          best = box;
+        }
+      });
+
+      if (!best) return;
+
+      (map[best.id] ||= []).push(doc);
     });
+
     return map;
   }, [docs]);
 
@@ -138,14 +157,12 @@ export default function DashboardPage() {
     return map;
   }, [docs]);
 
-  // For a per-building box, use the global assignment above. SHARED_BOXES
-  // aren't scoped to a folder, so they still match by exact doc_name.
+  // For a per-building box, use the building assignment above; for a
+  // shared box, use the shared assignment above.
   const matchesFor = (box) => {
     if (box.isAnchor) return [];
     if (box.building) return docsByBoxId[box.id] || [];
-
-    const doc = docsByName[box.label];
-    return doc ? [doc] : [];
+    return docsBySharedBoxId[box.id] || [];
   };
 
   const handleBoxClick = (matches) => {
