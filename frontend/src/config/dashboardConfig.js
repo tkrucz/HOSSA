@@ -8,14 +8,14 @@ const ROW = (n) => n * ROW_GAP;
 const COL = (n) => n * COL_GAP;
 
 // Vertical space reserved for one building's whole row-block.
-export const BUILDING_BLOCK_HEIGHT = 4 * ROW_GAP + 60;
+export const BUILDING_BLOCK_HEIGHT = 8 * ROW_GAP;
 
 // Buildings start below all the shared "intro" content (input boxes,
 // Warunki usunięcia kolizji chain, Dane do warunków fan-out) so nothing overlaps regardless of how tall that shared content is.
 export const BUILDING_Y_BASE = ROW(10);
 
 // Column each building's anchor box sits in - one step right of
-// "Koncepcja Wstępna", one step left of the building's own mapa_cel/geodezja/koncepcja_arch fan-out.
+// "Koncepcja Wstępna", one step left of the building's own mapa_cel/geologia/koncepcja_arch fan-out.
 export const ANCHOR_X = COL(2);
 
 // Shared, single-instance boxes - one per whole project, regardless of how many buildings it has.
@@ -38,8 +38,9 @@ export const SHARED_BOXES = [
   { id: "dane_do_war_elektryka", label: "Dane do Warunków- Elektryka", x: COL(3), y: ROW(4) },
   { id: "dane_do_war_deszcz", label: "Dane do Warunków- Deszczówka", x: COL(3), y: ROW(5) },
 
-  // "Koncepcja Wstępna" -> "Plan Zagospodarowania Terenu" -> Umowy Branżowe
-  { id: "pzt_podklad", label: "Plan Zagospodarowania Terenu", x: COL(2), y: ROW(6) },
+  // Koncepcja zagospodarowania wód deszczowych- rury spustowe/plansza zlewni
+  // "Koncepcja Wstępna" -> "Projekt Zagospodarowania Terenu" -> Umowy Branżowe
+  { id: "pzt_podklad", label: "Projekt Zagospodarowania Terenu podkład", x: COL(2), y: ROW(6) },
   { id: "um_brnz_deszcz", label: "Umowy Branżowe- Deszczówka", x: COL(3), y: ROW(6) },
   { id: "um_brnz_woda", label: "Umowy Branżowe- Woda", x: COL(3), y: ROW(7) },
   { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: COL(3), y: ROW(8) },
@@ -50,8 +51,8 @@ export const SHARED_BOXES = [
 // `y` is relative to that building's own block; buildDashboardGraph() offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
 // Columns start one step right of each building's anchor box at x = ANCHOR_X.
 export const BUILDING_BOX_TEMPLATE = [
-  { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: COL(3), y: ROW(0) },
-  { id: "geodezja", suffix: "Geodezja", x: COL(3), y: ROW(1) },
+  { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: COL(3), y: ROW(0) }, // osobny element
+  { id: "geologia", suffix: "Geologia", x: COL(3), y: ROW(1) }, // osobny element
   { id: "koncepcja_arch", suffix: "Koncepcja Architektury Budynku", x: COL(3), y: ROW(2) },
 
   { id: "odbior2", suffix: "Odbiór koncepcji architektury budynku", x: COL(4), y: ROW(2) },
@@ -65,23 +66,44 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "pt_woda", suffix: "PT wody kan. CO", x: COL(6), y: ROW(1) },
   { id: "pt_elektryki", suffix: "PT elektryki", x: COL(6), y: ROW(2) },
   { id: "pt_konstr", suffix: "PT Konstrukcji", x: COL(6), y: ROW(3) },
+  { id: "pab_podkład", suffix: "Podkład do PAB", x: COL(6), y: ROW(4) }, // osobny element nad PT
 
   { id: "sprawdzenie_pt", suffix: "Sprawdzenie planów technicznych", x: COL(7), y: ROW(1.5) },
+  { id: "pab", suffix: "Projekt Architektury Budynku", x: COL(7), y: ROW(-1.5) }, // osobny element nad PT
+  { id: "uw", suffix: "Umowa Wnętrza", x : COL(7), y: ROW(5)},
 
   { id: "pt_went_final", suffix: "PT wentylacji po sprawdzeniu", x: COL(8), y: ROW(0) },
   { id: "pt_woda_final", suffix: "PT wody kanalizacyjnej po sprawdzeniu", x: COL(8), y: ROW(1) },
   { id: "pt_elektryki_final", suffix: "PT elektryki po sprawdzeniu", x: COL(8), y: ROW(2) },
   { id: "pt_konstr_final", suffix: "PT Konstrukcji po sprawdzeniu", x: COL(8), y: ROW(3) },
+  { id: "koncepcja_wntrz", suffix: "Koncepcja Wnętrz", x: COL(8), y : ROW(5)},
 
-  { id: "pab", suffix: "Plan Architektury Budynku", x: COL(9), y: ROW(1.5) },
-
-  { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: COL(10), y: ROW(1.5) },
+  { id: "podkład_el", suffix: "Podkład dla Elektryków", x: COL(9), y : ROW(5)},
 
   { id: "odbior3", suffix: "Odbiór planu architektury budynku", x: COL(11), y: ROW(1.5) },
+  { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: COL(11), y: ROW(1.5) },
+
+  {id : "pw_went", suffix: "Plan Wykonawczy Wnetylacji", x : COL(12), y : ROW(4)},
+  {id : "pw_woda", suffix: "Plan Wykonawczy Wody Kanalizacyjnej", x : COL(12), y : ROW(5)},
+  {id : "pw_konstr", suffix: "Plan Wykonawczy Konstrukcji", x : COL(12), y : ROW(6)},
+  {id : "pw_el", suffix: "Plan Wykonawczy Elektryki", x : COL(12), y : ROW(7)},
+  {id : "mat_ofert", suffix: "Materiały Ofertowe", x : COL(12), y : ROW(3)},
+
+  { id: "sprawdzenie_pw", suffix: "Sprawdzenie planów wykonawczych", x: COL(13), y: ROW(5.5) },
+
+  {id : "pw_went_final", suffix: "Plan Wykonawczy Wnetylacji po sprawdzeniu", x : COL(14), y : ROW(4)},
+  {id : "pw_woda_final", suffix: "Plan Wykonawczy Wody Kanalizacyjnej po sprawdzeniu", x : COL(14), y : ROW(5)},
+  {id : "pw_konstr_final", suffix: "Plan Wykonawczy Konstrukcji po sprawdzeniu", x : COL(14), y : ROW(6)},
+  {id : "pw_el_final", suffix: "Plan Wykonawczy Elektryki po sprawdzeniu", x : COL(14), y : ROW(7)},
+  {id : "mat_ofert_final", suffix: "Materiały Ofertowe po sprawdzeniu", x : COL(14), y : ROW(3)},
+
+  {id : "pw_archt_bud", suffix: "Plan Wykonawczy Architektury Budynku", x : COL (15), y : ROW(4)},
+
+  {id : "mat_ofert_po_pw", suffix: "Materiały Ofertowe Po PW", x : COL(16), y : ROW(2)}
 ];
 
 // Template edges among SHARED boxes and among BUILDING_BOX_TEMPLATE boxes.
-// Edges connecting koncepcja_wstepna to each building's anchor, and each anchor to its own mapa_cel/geodezja/koncepcja_arch,
+// Edges connecting koncepcja_wstepna to each building's anchor, and each anchor to its own mapa_cel/geologia/koncepcja_arch,
 // are generated separately in buildDashboardGraph() below - they're not "template ids", they're synthetic per-building nodes.
 export const EDGE_TEMPLATE = [
   ["mapa_dc", "koncepcja_wstepna"],
@@ -121,10 +143,10 @@ export const EDGE_TEMPLATE = [
   ["sprawdzenie_pt", "pt_woda_final"],
   ["sprawdzenie_pt", "pt_elektryki_final"],
   ["sprawdzenie_pt", "pt_konstr_final"],
-  ["pt_went_final", "pab"],
-  ["pt_woda_final", "pab"],
-  ["pt_elektryki_final", "pab"],
-  ["pt_konstr_final", "pab"],
+  ["pt_went_final", "pw_podkladow"],
+  ["pt_woda_final", "pw_podkladow"],
+  ["pt_elektryki_final", "pw_podkladow"],
+  ["pt_konstr_final", "pw_podkladow"],
   ["pab", "pw_podkladow"],
   ["pw_podkladow", "odbior3"],
 ];
@@ -182,7 +204,7 @@ export function buildDashboardGraph(buildings) {
     });
 
     edges.push([anchorId, `mapa_cel::${building}`]);
-    edges.push([anchorId, `geodezja::${building}`]);
+    edges.push([anchorId, `geologia::${building}`]);
     edges.push([anchorId, `koncepcja_arch::${building}`]);
   });
 
