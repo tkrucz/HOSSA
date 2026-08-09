@@ -15,9 +15,8 @@ import {
 
 const DEFAULT_COLOR = "9E9D9B"; // "brak" - no matching document found
 
-// True if `name` starts with `suffix` AND the next character (if any) isn't
-// a letter/digit - so "Geodezja (Robocza)" and "Geodezja - X" both count as
-// matching "Geodezja", but "GeodezjaAnnex" does not.
+// True if `name` starts with `suffix` AND the next character (if any) isn't a letter/digit - so "Geodezja (Robocza)"
+// and "Geodezja - X" both count as matching "Geodezja", but "GeodezjaAnnex" does not.
 const WORD_CHAR = /[a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/;
 function isPrefixMatch(name, suffix) {
   if (!name.startsWith(suffix)) return false;
@@ -25,9 +24,8 @@ function isPrefixMatch(name, suffix) {
   return nextChar === "" || !WORD_CHAR.test(nextChar);
 }
 
-// When several documents match one box, this decides which status "wins"
-// for the box's fill color - most-needs-attention first, so a single
-// problem document isn't hidden behind others that are further along.
+// When several documents match one box, this decides which status "wins" for the box's fill color -
+// most-needs-attention first, so a single problem document isn't hidden behind others that are further along.
 const STATUS_PRIORITY = [
   "wymaga zmian",
   "w trakcie przygotowania",
@@ -48,6 +46,10 @@ function pickRepresentative(matches) {
 }
 
 function wrapLabel(label) {
+  // Guards against a config entry with a missing suffix/label (e.g. a BUILDING_BOX_TEMPLATE item that used `label:` instead of `suffix:`) -
+  // shows a visible placeholder on that one box instead of throwing and blanking the entire dashboard.
+  if (!label) return ["(brak nazwy)"];
+
   const words = label.split(" ");
   const lines = [];
   let current = "";
@@ -81,12 +83,9 @@ export default function DashboardPage() {
 
   useEffect(loadDocs, [projectId]);
 
-  // Assigns every document to the SHARED_BOXES entry whose label is the
-  // LONGEST matching prefix of its name - same idea as docsByBoxId below,
-  // but for boxes that aren't scoped to a building/folder (e.g.
-  // "Plan Zagospodarowania Terenu" and "Plan Zagospodarowania Terenu
-  // Konserwator" both resolve to the same box instead of the second one
-  // being invisible).
+  // Assigns every document to the SHARED_BOXES entry whose label is the LONGEST matching prefix of its name -
+  // same idea as docsByBoxId below, but for boxes that aren't scoped to a building/folder
+  // (e.g. "Plan Zagospodarowania Terenu" and "Plan Zagospodarowania Terenu Konserwator" both resolve to the same box instead of the second one being invisible).
   const docsBySharedBoxId = useMemo(() => {
     const map = {};
 
@@ -109,9 +108,8 @@ export default function DashboardPage() {
     return map;
   }, [docs]);
 
-  // Buildings are discovered from folder names present in the project's
-  // documents (see discoverBuildings() in dashboardConfig.js) - the graph
-  // is generated to fit exactly that many, growing or shrinking with data.
+  // Buildings are discovered from folder names present in the project's documents (see discoverBuildings() in dashboardConfig.js)
+  // - the graph is generated to fit exactly that many, growing or shrinking with data.
   const buildings = useMemo(() => discoverBuildings(docs), [docs]);
 
   const { boxes, edges } = useMemo(
@@ -127,11 +125,9 @@ export default function DashboardPage() {
     return map;
   }, [boxes]);
 
-  // Assigns every document (within a building's folder) to the box whose
-  // stage suffix is the LONGEST matching prefix of its name - so
-  // "PT wentylacji po sprawdzeniu ..." goes to that box specifically,
-  // rather than also matching the shorter "PT wentylacji" box. Computed
-  // once for the whole project rather than independently per box.
+  // Assigns every document (within a building's folder) to the box whose stage suffix is the LONGEST matching prefix of its name
+  // - so "PT wentylacji po sprawdzeniu ..." goes to that box specifically, rather than also matching the shorter "PT wentylacji" box.
+  // Computed once for the whole project rather than independently per box.
   const docsByBoxId = useMemo(() => {
     const map = {};
 
@@ -157,8 +153,7 @@ export default function DashboardPage() {
     return map;
   }, [docs]);
 
-  // For a per-building box, use the building assignment above; for a
-  // shared box, use the shared assignment above.
+  // For a per-building box, use the building assignment above; for a shared box, use the shared assignment above.
   const matchesFor = (box) => {
     if (box.isAnchor) return [];
     if (box.building) return docsByBoxId[box.id] || [];

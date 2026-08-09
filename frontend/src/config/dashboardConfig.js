@@ -8,11 +8,11 @@ const ROW = (n) => n * ROW_GAP;
 const COL = (n) => n * COL_GAP;
 
 // Vertical space reserved for one building's whole row-block.
-export const BUILDING_BLOCK_HEIGHT = 8 * ROW_GAP;
+export const BUILDING_BLOCK_HEIGHT = 10 * ROW_GAP;
 
 // Buildings start below all the shared "intro" content (input boxes,
 // Warunki usunięcia kolizji chain, Dane do warunków fan-out) so nothing overlaps regardless of how tall that shared content is.
-export const BUILDING_Y_BASE = ROW(10);
+export const BUILDING_Y_BASE = ROW(15);
 
 // Column each building's anchor box sits in - one step right of
 // "Koncepcja Wstępna", one step left of the building's own mapa_cel/geologia/koncepcja_arch fan-out.
@@ -28,31 +28,64 @@ export const SHARED_BOXES = [
 
   // "Warunki usunięcia kolizji -> Projekt -> Uzgodnienia" chain
   { id: "war_usun_kolizji", label: "Warunki usunięcia kolizji", x: COL(2), y: ROW(0) },
-  { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
-  { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
+  { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(3.5) },
+  { id: "pzt_podklad", label: "Projekt Zagospodarowania Terenu podkład", x: COL(2), y: ROW(7.5) },
 
-  // "Dane do warunków" fan-out
-  { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(2) },
+  { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
   { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: COL(3), y: ROW(2) },
   { id: "dane_do_war_cieplo", label: "Dane do Warunków- Ciepło", x: COL(3), y: ROW(3) },
   { id: "dane_do_war_elektryka", label: "Dane do Warunków- Elektryka", x: COL(3), y: ROW(4) },
   { id: "dane_do_war_deszcz", label: "Dane do Warunków- Deszczówka", x: COL(3), y: ROW(5) },
 
-  // Koncepcja zagospodarowania wód deszczowych- rury spustowe/plansza zlewni
-  // "Koncepcja Wstępna" -> "Projekt Zagospodarowania Terenu" -> Umowy Branżowe
-  { id: "pzt_podklad", label: "Projekt Zagospodarowania Terenu podkład", x: COL(2), y: ROW(6) },
+  { id: "koncepcja_wody_deszczowej", label: "Koncepcja Zagospodarowania Wód Deszczowych- Rury Spustowe/Plansza Zlewni", x: COL(3), y: ROW(1) },
   { id: "um_brnz_deszcz", label: "Umowy Branżowe- Deszczówka", x: COL(3), y: ROW(6) },
   { id: "um_brnz_woda", label: "Umowy Branżowe- Woda", x: COL(3), y: ROW(7) },
   { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: COL(3), y: ROW(8) },
   { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(9) },
+
+  { id: "pzt", label: "Projekt Zagospodarowania Terenu", x : COL(4), y: ROW(7.5)},
+  { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
+
+  { id: "pozw_na_bud", label: "Pozwolenie na Budowę", x : COL(5), y: ROW(0)},
+  { id: "dane_do_kip", label: "Dane do KIP", x : COL(5), y: ROW(6) },
+
+  { id: "odbior1", label: "Odbiór pozwolenia na budowę", x : COL(6), y: ROW(0)},
+  { id: "kip", label: "Karta Informacyjna Przedsięwzięcia", x : COL(6), y : ROW(2)},
+  { id: "proj_lok_trafo", label: "Projekt Lokalizacji Trafo", x : COL(6), y : ROW(4)},
+  { id: "pb_trafo", label: "PB Trafo", x : COL(6), y : ROW(6)},
+  { id: "pt_trafo", label: "PT Trafo", x : COL(6), y : ROW(7)},
+  { id: "proj_tech_gaz_wew", label: "Projekt Techniczny Instalacji Gazowej Wewnętrznej", x : COL(6), y : ROW(8)},
+  { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zewnętrznej", x : COL(6), y : ROW(9)},
+  { id: "proj_tech_wody", label: "Projekt Techniczny Przyłączy Wody/Kanalizacji", x : COL(6), y : ROW(10)},
+  { id: "pt_odwodnienia", label: "P.T. Odwodnienia", x : COL(6), y : ROW(11)},
+
+  { id: "podklad_mal_arch", label: "Podkład Małej Architektury", x : COL(7), y: ROW(0)},
+  { id: "decyzja_srod", label: "Decyzja Środowiskowa", x : COL(7), y: ROW(2)},
+  { id: "uzg_lok_trafo", label: "Uzgodnienie Lokalizacji Trafo", x : COL(7), y : ROW(4)},
+  { id: "uzg_pb_pt_trafo", label: "Uzgodnienia PB", x : COL(7), y : ROW(6.5)},
+  { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia", x : COL(7), y : ROW(9)},
+  { id: "uzg_proj_tech_wody", label: "Uzgodnienia", x : COL(7), y : ROW(10)},
+  { id: "zbiornik", label: "Zbiornik", x : COL(7), y : ROW(11)},
+
+  { id: "umowa_ziel", label: "Umowa Zieleń", x : COL(8), y: ROW(2)},
+  { id: "p_t_drogi", label: "P.T. Drogi", x : COL(8), y: ROW(3)},
+  { id: "proj_ośw_trn", label: "Projekt Oświetlenia Terenu", x : COL(8), y: ROW(4)},
+  { id: "operat", label: "Operat", x : COL(8), y : ROW(11)},
+
+  { id: "proj_ziel", label: "Projekt Zieleni", x : COL(9), y: ROW(6)},
+  { id: "pozw_wodnoprawne", label: "Pozowlenie Wodnoprawne", x : COL(9), y : ROW(11)},
+
+  { id: "proj_drg", label: "Projekt Wykonawczy Drogi", x : COL(10), y: ROW(6)},
+  { id: "proj_mal_arch", label: "Projekt Małej Architektury", x : COL(10), y: ROW(7)},
+  { id: "proj_ziel_final", label: "Projekt Zieleni", x : COL(10), y: ROW(8)},
 ];
 
 // Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages.
 // `y` is relative to that building's own block; buildDashboardGraph() offsets it by BUILDING_Y_BASE + BUILDING_BLOCK_HEIGHT * buildingIndex.
 // Columns start one step right of each building's anchor box at x = ANCHOR_X.
 export const BUILDING_BOX_TEMPLATE = [
-  { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: COL(3), y: ROW(0) }, // osobny element
-  { id: "geologia", suffix: "Geologia", x: COL(3), y: ROW(1) }, // osobny element
+  { id: "mapa_cel", suffix: "Mapa do celów Projektu", x: COL(3), y: ROW(0) },
+  { id: "geologia", suffix: "Geologia", x: COL(3), y: ROW(1) },
   { id: "koncepcja_arch", suffix: "Koncepcja Architektury Budynku", x: COL(3), y: ROW(2) },
 
   { id: "odbior2", suffix: "Odbiór koncepcji architektury budynku", x: COL(4), y: ROW(2) },
@@ -66,10 +99,10 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "pt_woda", suffix: "PT wody kan. CO", x: COL(6), y: ROW(1) },
   { id: "pt_elektryki", suffix: "PT elektryki", x: COL(6), y: ROW(2) },
   { id: "pt_konstr", suffix: "PT Konstrukcji", x: COL(6), y: ROW(3) },
-  { id: "pab_podkład", suffix: "Podkład do PAB", x: COL(6), y: ROW(4) }, // osobny element nad PT
+  { id: "pab_podkład", suffix: "Podkład do PAB", x: COL(6), y: ROW(4) },
 
   { id: "sprawdzenie_pt", suffix: "Sprawdzenie planów technicznych", x: COL(7), y: ROW(1.5) },
-  { id: "pab", suffix: "Projekt Architektury Budynku", x: COL(7), y: ROW(-1.5) }, // osobny element nad PT
+  { id: "pab", suffix: "Projekt Architektury Budynku", x: COL(7), y: ROW(-1.5) },
   { id: "uw", suffix: "Umowa Wnętrza", x : COL(7), y: ROW(5)},
 
   { id: "pt_went_final", suffix: "PT wentylacji po sprawdzeniu", x: COL(8), y: ROW(0) },
@@ -78,28 +111,32 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "pt_konstr_final", suffix: "PT Konstrukcji po sprawdzeniu", x: COL(8), y: ROW(3) },
   { id: "koncepcja_wntrz", suffix: "Koncepcja Wnętrz", x: COL(8), y : ROW(5)},
 
-  { id: "podkład_el", suffix: "Podkład dla Elektryków", x: COL(9), y : ROW(5)},
+  { id: "podkład_el", suffix: "Podkład dla Elektryków", x: COL(9), y : ROW(5) },
 
+  // FIXED: was on the exact same column+row as odbior3 (COL(11), ROW(1.5)), so the two boxes fully overlapped and only one was ever visible/
+  // clickable. Moved to its own column, matching the edge order (pw_podkladow -> odbior3 implies pw_podkladow comes first).
+  { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: COL(10), y: ROW(1.5) },
   { id: "odbior3", suffix: "Odbiór planu architektury budynku", x: COL(11), y: ROW(1.5) },
-  { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: COL(11), y: ROW(1.5) },
 
-  {id : "pw_went", suffix: "Plan Wykonawczy Wnetylacji", x : COL(12), y : ROW(4)},
-  {id : "pw_woda", suffix: "Plan Wykonawczy Wody Kanalizacyjnej", x : COL(12), y : ROW(5)},
-  {id : "pw_konstr", suffix: "Plan Wykonawczy Konstrukcji", x : COL(12), y : ROW(6)},
-  {id : "pw_el", suffix: "Plan Wykonawczy Elektryki", x : COL(12), y : ROW(7)},
-  {id : "mat_ofert", suffix: "Materiały Ofertowe", x : COL(12), y : ROW(3)},
+  { id : "pw_went", suffix: "Plan Wykonawczy Wnetylacji", x : COL(12), y : ROW(4) },
+  { id : "pw_woda", suffix: "Plan Wykonawczy Wody Kanalizacyjnej", x : COL(12), y : ROW(5) },
+  { id : "pw_konstr", suffix: "Plan Wykonawczy Konstrukcji", x : COL(12), y : ROW(6) },
+  { id : "pw_el", suffix: "Plan Wykonawczy Elektryki", x : COL(12), y : ROW(7) },
+  { id : "mat_ofert", suffix: "Materiały Ofertowe", x : COL(12), y : ROW(3) },
 
   { id: "sprawdzenie_pw", suffix: "Sprawdzenie planów wykonawczych", x: COL(13), y: ROW(5.5) },
 
-  {id : "pw_went_final", suffix: "Plan Wykonawczy Wnetylacji po sprawdzeniu", x : COL(14), y : ROW(4)},
-  {id : "pw_woda_final", suffix: "Plan Wykonawczy Wody Kanalizacyjnej po sprawdzeniu", x : COL(14), y : ROW(5)},
-  {id : "pw_konstr_final", suffix: "Plan Wykonawczy Konstrukcji po sprawdzeniu", x : COL(14), y : ROW(6)},
-  {id : "pw_el_final", suffix: "Plan Wykonawczy Elektryki po sprawdzeniu", x : COL(14), y : ROW(7)},
-  {id : "mat_ofert_final", suffix: "Materiały Ofertowe po sprawdzeniu", x : COL(14), y : ROW(3)},
+  { id : "pw_went_final", suffix: "Plan Wykonawczy Wnetylacji po sprawdzeniu", x : COL(14), y : ROW(4) },
+  { id : "pw_woda_final", suffix: "Plan Wykonawczy Wody Kanalizacyjnej po sprawdzeniu", x : COL(14), y : ROW(5) },
+  { id : "pw_konstr_final", suffix: "Plan Wykonawczy Konstrukcji po sprawdzeniu", x : COL(14), y : ROW(6) },
+  { id : "pw_el_final", suffix: "Plan Wykonawczy Elektryki po sprawdzeniu", x : COL(14), y : ROW(7) },
+  { id : "mat_ofert_final", suffix: "Materiały Ofertowe po sprawdzeniu", x : COL(14), y : ROW(3) },
 
-  {id : "pw_archt_bud", suffix: "Plan Wykonawczy Architektury Budynku", x : COL (15), y : ROW(4)},
+  // FIXED: was `label:` (silently produced `suffix: undefined` for this box - see chat for how that crashed the whole dashboard render).
+  { id: "proj_wnętrz", suffix: "Projekt Wnętrz", x : COL(15), y: ROW(0)},
+  { id : "pw_archt_bud", suffix: "Plan Wykonawczy Architektury Budynku", x : COL(15), y : ROW(4) },
 
-  {id : "mat_ofert_po_pw", suffix: "Materiały Ofertowe Po PW", x : COL(16), y : ROW(2)}
+  { id : "mat_ofert_po_pw", suffix: "Materiały Ofertowe Po PW", x : COL(16), y : ROW(2) }
 ];
 
 // Template edges among SHARED boxes and among BUILDING_BOX_TEMPLATE boxes.
@@ -153,12 +190,14 @@ export const EDGE_TEMPLATE = [
 
 const REPEATABLE_IDS = new Set(BUILDING_BOX_TEMPLATE.map((t) => t.id));
 
-// Buildings are just the folder names present in this project's documents (e.g. a file under "Projekt 1\Budynek A\..." belongs to building "Budynek A") -
-// the same `folder` value the regular folder-browsing view already uses. Returns a sorted, deduped list of every distinct folder that has at least one document in it.
+// Buildings are just the folder names present in this project's documents
+// (e.g. a file under "Projekt 1\Budynek A\..." belongs to building
+// "Budynek A") - the same `folder` value the regular folder-browsing view
+// already uses. Returns a sorted, deduped list of every distinct folder
+// that has at least one document in it.
 //
 // Caveat: this treats every subfolder in the project as "a building". If a project ever mixes building folders with other kinds of folders
-// (e.g. a flat "Architektura"/"Konstrukcja" layout with no buildings at all),
-// this would show every one of those as a building block too.
+// (e.g. a flat "Architektura"/"Konstrukcja" layout with no buildings at all), this would show every one of those as a building block too.
 export function discoverBuildings(docs) {
   const names = new Set();
 
@@ -171,9 +210,8 @@ export function discoverBuildings(docs) {
 
 // Builds the full box + edge list for a given list of building names.
 // Each building gets: one anchor box (id `anchor::{building}`, a purely visual node - not matched to any document), plus one box per
-// BUILDING_BOX_TEMPLATE entry. Box `label` is just the stage name - building context comes from the anchor box and vertical grouping,
-// not a text prefix. `suffix`/`building` are kept on each box so the page can match it against real documents
-// (any doc in that building's folder whose name equals or starts with "{suffix} - ").
+// BUILDING_BOX_TEMPLATE entry. Box `label` is just the stage name - building context comes from the anchor box and vertical grouping, not a
+// text prefix. `suffix`/`building` are kept on each box so the page can match it against real documents.
 export function buildDashboardGraph(buildings) {
   const boxes = [...SHARED_BOXES];
   const edges = [];
@@ -186,7 +224,7 @@ export function buildDashboardGraph(buildings) {
       id: anchorId,
       label: building,
       x: ANCHOR_X,
-      y: yOffset + ROW_GAP, // vertically centered against the 3-row fan-out
+      y: yOffset + ROW_GAP,
       building,
       isAnchor: true,
     });
