@@ -25,7 +25,7 @@ VALUES
 ('w trakcie przygotowania', 'FFA200'),
 ('przygotowany', 'A4E805'),
 ('zatwierdzony', '05E810'),
-('nie dotyczy', '440373'),
+('nie dotyczy', 'B8A1CC'),
 ('wymaga zmian', 'E81033');
 
 CREATE TABLE users (

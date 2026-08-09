@@ -4,7 +4,7 @@ export const STATUS_LEGEND = [
   { status: "w trakcie przygotowania", color: "FFA200" },
   { status: "przygotowany", color: "A4E805" },
   { status: "zatwierdzony", color: "05E810" },
-  { status: "nie dotyczy", color: "440373" },
+  { status: "nie dotyczy", color: "B8A1CC" },
   { status: "wymaga zmian", color: "E81033" },
 ];
 

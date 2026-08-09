@@ -107,6 +107,15 @@ h1 {
   pointer-events: none;
 }
 
+.dashboard-box-na {
+  cursor: pointer;
+}
+
+.dashboard-box-na:hover rect {
+  stroke: #2563eb;
+  fill: #eff6ff;
+}
+
 .picker-modal {
   max-width: 380px;
 }

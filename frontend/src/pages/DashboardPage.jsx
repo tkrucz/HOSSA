@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import DocumentModal from "../components/DocumentModal";
 import DocumentPickerModal from "../components/DocumentPickerModal";
 import { API_URL } from "../api";
+import { useAuth, authHeaders } from "../authContext";
 import { STATUS_LEGEND } from "../statusLegend";
 import {
   BOX_WIDTH,
@@ -15,8 +16,8 @@ import {
 
 const DEFAULT_COLOR = "9E9D9B"; // "brak" - no matching document found
 
-// True if `name` starts with `suffix` AND the next character (if any) isn't a letter/digit - so "Geodezja (Robocza)"
-// and "Geodezja - X" both count as matching "Geodezja", but "GeodezjaAnnex" does not.
+// True if `name` starts with `suffix` AND the next character (if any) isn't a letter/digit -
+// so "Geodezja (Robocza)" and "Geodezja - X" both count as matching "Geodezja", but "GeodezjaAnnex" does not.
 const WORD_CHAR = /[a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/;
 function isPrefixMatch(name, suffix) {
   if (!name.startsWith(suffix)) return false;
@@ -46,8 +47,8 @@ function pickRepresentative(matches) {
 }
 
 function wrapLabel(label) {
-  // Guards against a config entry with a missing suffix/label (e.g. a BUILDING_BOX_TEMPLATE item that used `label:` instead of `suffix:`) -
-  // shows a visible placeholder on that one box instead of throwing and blanking the entire dashboard.
+  // Guards against a config entry with a missing suffix/label (e.g. a BUILDING_BOX_TEMPLATE item that used `label:` instead of `suffix:`)
+  // - shows a visible placeholder on that one box instead of throwing and blanking the entire dashboard.
   if (!label) return ["(brak nazwy)"];
 
   const words = label.split(" ");
@@ -70,6 +71,7 @@ function wrapLabel(label) {
 
 export default function DashboardPage() {
   const { projectId } = useParams();
+  const { token } = useAuth();
   const [docs, setDocs] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [pickerDocs, setPickerDocs] = useState(null);
@@ -166,6 +168,35 @@ export default function DashboardPage() {
     } else {
       setPickerDocs(matches);
     }
+  };
+
+  // Marks an otherwise-empty ("brak") box as "nie dotyczy" by creating a
+  // placeholder document with no real file behind it - see the checkbox
+  // rendered on unmatched boxes below.
+  const handleMarkNotApplicable = (box) => {
+    const label = box.suffix || box.label;
+
+    if (!window.confirm(`Oznaczyć "${label}" jako "nie dotyczy"?`)) return;
+
+    fetch(`${API_URL}/projects/${projectId}/documents/placeholder`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(token),
+      },
+      body: JSON.stringify({
+        name: label,
+        folder: box.building || null,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(() => loadDocs())
+      .catch(() =>
+        alert('Nie udało się oznaczyć jako "nie dotyczy". Czy jesteś zalogowany?')
+      );
   };
 
   const canvasWidth =
@@ -268,6 +299,26 @@ export default function DashboardPage() {
                   >
                     {matches.length}
                   </text>
+                )}
+                {!box.isAnchor && matches.length === 0 && (
+                  <g
+                    className="dashboard-box-na"
+                    transform="translate(6, 6)"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarkNotApplicable(box);
+                    }}
+                  >
+                    <title>Oznacz jako "nie dotyczy"</title>
+                    <rect
+                      width="16"
+                      height="16"
+                      rx="3"
+                      fill="#ffffff"
+                      stroke="#1f2430"
+                      strokeWidth="1.5"
+                    />
+                  </g>
                 )}
                 <text
                   x={BOX_WIDTH / 2}

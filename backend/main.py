@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 from datetime import date
+from uuid import uuid4
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -156,10 +157,12 @@ def get_folders(project_id: str, db: Session = Depends(get_db)):
     return [{"id": f[0], "name": f[0], "count": f[1]} for f in folders]
 
 
-# Returns every document in a project, regardless of subfolder.
-# Used by the dashboard view. Each document includes its `folder` (the second segment of relative_path)
-# - the dashboard treats a document's folder as its building (e.g. a file in "Projekt 1\Budynek A\..." belongs to "Budynek A"),
-# and matches it to a process-map box by name within that folder rather than by a "Budynek A - " filename prefix.
+# Returns every document in a project, regardless of subfolder. Used by the
+# dashboard view. Each document includes its `folder` (the second segment
+# of relative_path) - the dashboard treats a document's folder as its
+# building (e.g. a file in "Projekt 1\Budynek A\..." belongs to "Budynek A"),
+# and matches it to a process-map box by name within that folder rather
+# than by a "Budynek A - " filename prefix.
 @app.get("/projects/{project_id}/documents")
 def get_project_documents(project_id: str, db: Session = Depends(get_db)):
     folder_expr = func.split_part(Document.relative_path, PATH_SEP, 2)
@@ -185,10 +188,74 @@ def get_project_documents(project_id: str, db: Session = Depends(get_db)):
     ]
 
 
+class MarkNotApplicableRequest(BaseModel):
+    name: str
+    folder: str | None = None  # building name for per-building boxes; omit for shared boxes
+
+
+# Creates (or updates, if it already exists) a placeholder document row with
+# no real file behind it, set to status "nie dotyczy". This lets a stage box
+# on the dashboard be explicitly marked "doesn't apply here" even when
+# nothing has ever been scanned for it - without this, a box with zero
+# matching documents can never leave the "brak" (grey) state.
+@app.post("/projects/{project_id}/documents/placeholder")
+def mark_not_applicable(
+    project_id: str,
+    payload: MarkNotApplicableRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    not_applicable = db.query(Status).filter(Status.status == "nie dotyczy").first()
+    if not_applicable is None:
+        raise HTTPException(
+            status_code=500, detail="Status 'nie dotyczy' nie istnieje w bazie"
+        )
+
+    if payload.folder:
+        relative_path = f"{project_id}{PATH_SEP}{payload.folder}{PATH_SEP}{payload.name}"
+    else:
+        relative_path = f"{project_id}{PATH_SEP}{payload.name}"
+
+    doc = db.query(Document).filter(Document.relative_path == relative_path).first()
+
+    if doc is None:
+        doc = Document(
+            document_id=uuid4(),
+            doc_name=payload.name,
+            relative_path=relative_path,
+            status_id=not_applicable.status_id,
+            zatwierdzone=0,
+            user_id=current_user.user_id,
+        )
+        db.add(doc)
+    else:
+        # Already exists (either a real synced file at this exact path, or
+        # this placeholder was created before) - just re-mark it.
+        doc.status_id = not_applicable.status_id
+        doc.zatwierdzone = 0
+        doc.user_id = current_user.user_id
+
+    db.commit()
+    db.refresh(doc)
+
+    return {
+        "id": str(doc.document_id),
+        "name": doc.doc_name,
+        "folder": payload.folder,
+        "extension": doc.extension_,
+        "status": doc.status.status,
+        "color": doc.status.color,
+        "size": doc.size_,
+        "modified_at": doc.data_zmiany_dokumentu.isoformat() if doc.data_zmiany_dokumentu else None,
+    }
+
+
 # NOTE: nested under /projects/{project_id}/... rather than the flat
-# /folders/{folder_id}/documents from the mock-up. Folder names like "Inne" or "Elektryka" can repeat across different projects,
-# so filtering on folder name alone could mix documents from two projects together.
-# Scoping by both project_id and folder_id keeps each folder's documents correctly isolated.
+# /folders/{folder_id}/documents from the mock-up. Folder names like "Inne"
+# or "Elektryka" can repeat across different projects, so filtering on
+# folder name alone could mix documents from two projects together.
+# Scoping by both project_id and folder_id keeps each folder's documents
+# correctly isolated.
 @app.get("/projects/{project_id}/folders/{folder_id}/documents")
 def get_documents(project_id: str, folder_id: str, db: Session = Depends(get_db)):
     docs = (
@@ -326,20 +393,24 @@ def update_document(
     if doc is None:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # exclude_unset means a field genuinely absent from the request body is left untouched,
-    # while a field explicitly sent as `null` (e.g. marking data_waznosci "nie dotyczy") really does clear it to NULL.
+    # exclude_unset means a field genuinely absent from the request body is
+    # left untouched, while a field explicitly sent as `null` (e.g. marking
+    # data_waznosci "nie dotyczy") really does clear it to NULL.
     updates = payload.model_dump(exclude_unset=True)
 
     for field, value in updates.items():
         setattr(doc, field, value)
 
-    # Who made this change is never taken from the client - it's always the authenticated session,
-    # and only stamped when something actually changed (an empty PATCH shouldn't touch user_id or fire the archive/modification triggers).
+    # Who made this change is never taken from the client - it's always the
+    # authenticated session, and only stamped when something actually
+    # changed (an empty PATCH shouldn't touch user_id or fire the
+    # archive/modification triggers).
     if updates:
         doc.user_id = current_user.user_id
 
-    # zatwierdzone is fully derived from the current status - never settable directly by the client.
-    # Recomputed every save so it can never drift out of sync with status_id, however that field ended up changing.
+    # zatwierdzone is fully derived from the current status - never settable
+    # directly by the client. Recomputed every save so it can never drift
+    # out of sync with status_id, however that field ended up changing.
     doc.zatwierdzone = 1 if doc.status.status == "zatwierdzony" else 0
 
     db.commit()
