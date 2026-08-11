@@ -48,46 +48,50 @@ export const SHARED_BOXES = [
   { id: "umowa_przyl_nn", label: "Umowa przył. NN", x: COL(4), y: ROW(6) },
   { id: "pzt", label: "PZT", x: COL(4), y: ROW(9)},
 
-  { id: "koncepcja_wody_deszczowej_big", label: "Koncepcja Zagospodarowania Wód Deszczowych- Rury Spustowe/Plansza Zlewni", x: COL(5), y: ROW(1) },
+  { id: "koncepcja_wody_deszczowej_big", label: "Koncepcja Zagospodarowania Wód Deszczowych- Rury Spustowe/Plansza Zlewni", x: COL(5), y: ROW(1) }, //too long name
   { id: "pozw_na_bud", label: "Pozwolenie na Budowę", x: COL(5), y: ROW(9)},
 
-  { id: "odbior1", label: "Odbiór pozwolenia na budowę", x: COL(6), y: ROW(9)},
-  //   Locate all downstream blocks somehow logically
-  { id: "proj_lok_trafo", label: "Projekt Lokalizacji Trafo", x: COL(6), y: ROW(4)},
-  { id: "pb_trafo", label: "PB Trafo", x: COL(6), y: ROW(6)},
-  { id: "pt_trafo", label: "PT Trafo", x: COL(6), y: ROW(7)},
+  { id: "pt_odwodnienia", label: "P.T. Odwodnienia", x: COL(6), y: ROW(0)},
+  { id: "proj_lok_trafo", label: "Projekt Lokalizacji Trafo", x: COL(6), y: ROW(2.5)},
+  { id: "pb_trafo", label: "PB Trafo", x: COL(6), y: ROW(4)},
+  { id: "pt_trafo", label: "PT Trafo", x: COL(6), y: ROW(5)},
+  { id: "proj_tech_wody", label: "Projekt Techniczny Przyłączy Wody/Kanalizacji", x: COL(6), y: ROW(6)},
+  { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zewnętrznej", x: COL(6), y: ROW(7)},
   { id: "proj_tech_gaz_wew", label: "Projekt Techniczny Instalacji Gazowej Wewnętrznej", x: COL(6), y: ROW(8)},
-  { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zewnętrznej", x: COL(6), y: ROW(9)},
-  { id: "proj_tech_wody", label: "Projekt Techniczny Przyłączy Wody/Kanalizacji", x: COL(6), y: ROW(10)},
-  { id: "pt_odwodnienia", label: "P.T. Odwodnienia", x: COL(6), y: ROW(11)},
+  { id: "odbior3", label: "Odbiór pozwolenia na budowę", x: COL(6), y: ROW(9)},
+
   //   Also add those block to be nested inside {id: koncepcja_wody_deszczowej_big}
   // { id: "koncepcja_mal_arch", label: "Koncepcja Małej Architektury", x: COL(?), y: ROW(?)},
   // { id: "koncpecja_wod_deszcz", label: "Koncepcja Zagospodarowania Wód Deszczowych", x: COL(?), y: ROW(?)},
   // { id: "koncepcja_drog", label: "Koncepcja Drogowa", x: COL(?), y: ROW(?)},
   // { id: "koncepcja_zasil", label: "Konepcja Zasilania IS/CO/GAZ", x: COL(?), y: ROW(?)},
 
-  { id: "dane_do_kip", label: "Dane do KIP", x: COL(7), y: ROW(1) },
+  { id: "zbiornik", label: "Zbiornik", x: COL(7), y: ROW(0)},
   { id: "podklad_mal_arch", label: "Podkład Małej Architektury", x: COL(7), y: ROW(9)},
-  { id: "uzg_lok_trafo", label: "Uzgodnienie Lokalizacji Trafo", x: COL(7), y: ROW(4)},
-  { id: "uzg_pb_pt_trafo", label: "Uzgodnienia PB", x: COL(7), y: ROW(6.5)},
-  { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia", x: COL(7), y: ROW(9)},
-  { id: "uzg_proj_tech_wody", label: "Uzgodnienia", x: COL(7), y: ROW(10)},
-  { id: "zbiornik", label: "Zbiornik", x: COL(7), y: ROW(11)},
+  { id: "uzg_lok_trafo", label: "Uzgodnienie Lokalizacji Trafo", x: COL(7), y: ROW(2.5)},
+  { id: "uzg_pb_pt_trafo", label: "Uzgodnienia PB", x: COL(7), y: ROW(4.5)},
+  { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia", x: COL(7), y: ROW(6)},
+  { id: "uzg_proj_tech_wody", label: "Uzgodnienia", x: COL(7), y: ROW(7)},
 
-  { id: "kip", label: "Karta Informacyjna Przedsięwzięcia", x: COL(8), y: ROW(1)},
-  { id: "operat", label: "Operat", x: COL(8), y: ROW(11)},
+  { id: "operat", label: "Operat", x: COL(8), y: ROW(0)},
 
-  { id: "decyzja_srod", label: "Decyzja Środowiskowa", x: COL(9), y: ROW(1)},
-  { id: "umowa_ziel", label: "Umowa Zieleń", x: COL(9), y: ROW(2)},
-  { id: "p_t_drogi", label: "P.T. Drogi", x: COL(9), y: ROW(3)},
-  { id: "proj_ośw_trn", label: "Projekt Oświetlenia Terenu", x: COL(9), y: ROW(4)},
+  { id: "pozw_wodnoprawne", label: "Pozowlenie Wodnoprawne", x: COL(9), y: ROW(0)},
+  { id: "dane_do_kip", label: "Dane do KIP", x: COL(9), y: ROW(1) },
 
-  { id: "proj_ziel", label: "Projekt Zieleni", x: COL(10), y: ROW(2)},
-  { id: "pozw_wodnoprawne", label: "Pozowlenie Wodnoprawne", x: COL(10), y: ROW(11)},
+  { id: "kip", label: "Karta Informacyjna Przedsięwzięcia", x: COL(10), y: ROW(1)},
 
-  { id: "proj_drg", label: "Projekt Wykonawczy Drogi", x: COL(11), y: ROW(6)},
-  { id: "proj_mal_arch", label: "Projekt Małej Architektury", x: COL(11), y: ROW(7)},
-  { id: "proj_ziel_final", label: "Projekt Zieleni", x: COL(11), y: ROW(8)},
+  { id: "decyzja_srod", label: "Decyzja Środowiskowa", x: COL(11), y: ROW(1)},
+  { id: "umowa_ziel", label: "Umowa Zieleń", x: COL(11), y: ROW(2)},
+  { id: "p_t_drogi", label: "P.T. Drogi", x: COL(11), y: ROW(3)},
+  { id: "proj_osw_trn", label: "Projekt Oświetlenia Terenu", x: COL(11), y: ROW(4)},
+
+  { id: "proj_ziel", label: "Projekt Zieleni", x: COL(12), y: ROW(2)},
+
+  { id: "sprawdzenie_pt_proj_ziel", label: "Sprawdzenie", x: COL(13), y: ROW(3) },
+
+  { id: "proj_drg", label: "Projekt Wykonawczy Drogi", x: COL(14), y: ROW(6)},
+  { id: "proj_mal_arch", label: "Projekt Małej Architektury", x: COL(14), y: ROW(7)},
+  { id: "proj_ziel_final", label: "Projekt Zieleni", x: COL(14), y: ROW(8)},
 ];
 
 // Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages.
@@ -98,7 +102,7 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "geologia", suffix: "Geologia", x: COL(3), y: ROW(1) },
   { id: "koncepcja_arch", suffix: "Koncepcja Architektury Budynku", x: COL(3), y: ROW(2) },
 
-  { id: "odbior2", suffix: "Odbiór koncepcji architektury budynku", x: COL(4), y: ROW(2) },
+  { id: "odbior1", suffix: "Odbiór koncepcji architektury budynku", x: COL(4), y: ROW(2) },
 
   { id: "wentylacje", suffix: "Umowa Branżowa- wentylacje", x: COL(5), y: ROW(0) },
   { id: "woda", suffix: "Umowa Branżowa- woda kanalizacyjna CO", x: COL(5), y: ROW(1) },
@@ -123,7 +127,7 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "pt_konstr_final", suffix: "PT Konstrukcji po sprawdzeniu", x: COL(8), y: ROW(3) },
   { id: "podklad_el", suffix: "Podkład dla Elektryków", x: COL(8), y: ROW(5) },
 
-  { id: "odbior3", suffix: "Odbiór planu architektury budynku", x: COL(9), y: ROW(-1.5) },
+  { id: "odbior2", suffix: "Odbiór planu architektury budynku", x: COL(9), y: ROW(-1.5) },
 
   { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: COL(10), y: ROW(1.5) },
 
@@ -164,24 +168,35 @@ export const EDGE_TEMPLATE = [
   ["dane_do_war", "dane_do_war_elektryka"],
   ["dane_do_war", "dane_do_war_deszcz"],
 
+  ["dane_do_war_woda", "wt_woda_kan"],
+  ["dane_do_war_cieplo", "wt_gaz"],
+  ["dane_do_war_cieplo", "umowa_przyl_co"],
+  ["dane_do_war_elektryka", "wt_trafo"],
+  ["dane_do_war_elektryka", "umowa_przyl_nn"],
+
   ["koncepcja_wstepna", "pzt_podklad"],
   ["pzt_podklad", "um_brnz_deszcz"],
   ["pzt_podklad", "um_brnz_woda"],
   ["pzt_podklad", "um_brnz_drogi"],
   ["pzt_podklad", "um_brnz_elektryka"],
 
+  ["koncepcja_wstepna", "koncepcja_wody_deszczowej_big"],
+
   ["um_brnz_deszcz", "pzt"],
   ["um_brnz_woda", "pzt"],
   ["um_brnz_drogi", "pzt"],
   ["um_brnz_elektryka", "pzt"],
 
-  ["koncepcja_arch", "odbior2"],
+  ["pzt", "pozw_na_bud"],
+  ["pozw_na_bud", "odbior3"],
 
-  ["odbior2", "wentylacje"],
-  ["odbior2", "woda"],
-  ["odbior2", "nn"],
-  ["odbior2", "konstrukcja"],
-  ["odbior2", "uw"],
+  ["koncepcja_arch", "odbior1"],
+
+  ["odbior1", "wentylacje"],
+  ["odbior1", "woda"],
+  ["odbior1", "nn"],
+  ["odbior1", "konstrukcja"],
+  ["odbior1", "uw"],
 
   ["uw", "koncepcja_wntrz"],
 
@@ -205,15 +220,27 @@ export const EDGE_TEMPLATE = [
   ["sprawdzenie_pt", "pt_konstr_final"],
 
   ["pab_podklad", "pab"],
-  ["pab", "odbior3"],
+  ["pab", "odbior2"],
 
   ["pt_went_final", "pw_podkladow"],
   ["pt_woda_final", "pw_podkladow"],
   ["pt_elektryki_final", "pw_podkladow"],
   ["pt_konstr_final", "pw_podkladow"],
-  ["odbior3", "pw_podkladow"],
+  ["odbior2", "pw_podkladow"],
 
   ["pw_podkladow", "pw_archt_bud"],
+
+  ["dane_do_kip", "kip"],
+  ["kip", "decyzja_srod"],
+  ["decyzja_srod", "pzt"],
+
+  ["umowa_ziel", "proj_ziel"],
+  ["proj_ziel", "sprawdzenie_pt_proj_ziel"],
+  ["p_t_drogi", "sprawdzenie_pt_proj_ziel"],
+  ["sprawdzenie_pt_proj_ziel", "proj_drg"],
+  ["sprawdzenie_pt_proj_ziel", "proj_mal_arch"],
+  ["sprawdzenie_pt_proj_ziel", "proj_ziel_final"],
+  ["proj_osw_trn", "proj_ziel_final"],
 
   ["pw_went", "sprawdzenie_pw"],
   ["pw_woda", "sprawdzenie_pw"],
