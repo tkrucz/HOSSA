@@ -26,31 +26,33 @@ export const SHARED_BOXES = [
 
   { id: "koncepcja_wstepna", label: "Koncepcja Wstępna", x: COL(1), y: ROW(1) },
 
-  // "Warunki usunięcia kolizji -> Projekt -> Uzgodnienia" chain
   { id: "war_usun_kolizji", label: "Warunki usunięcia kolizji", x: COL(2), y: ROW(0) },
   { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(3.5) },
-  { id: "pzt_podklad", label: "PZT podkład", x: COL(2), y: ROW(7.5) },
+  { id: "pzt_podklad", label: "PZT podkład", x: COL(2), y: ROW(9) },
 
   { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
   { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: COL(3), y: ROW(2) },
   { id: "dane_do_war_cieplo", label: "Dane do Warunków- Ciepło", x: COL(3), y: ROW(3) },
   { id: "dane_do_war_elektryka", label: "Dane do Warunków- Elektryka", x: COL(3), y: ROW(4) },
   { id: "dane_do_war_deszcz", label: "Dane do Warunków- Deszczówka", x: COL(3), y: ROW(5) },
+  { id: "um_brnz_deszcz", label: "Umowy Branżowe- Deszczówka", x: COL(3), y: ROW(8) },
+  { id: "um_brnz_woda", label: "Umowy Branżowe- Woda", x: COL(3), y: ROW(9) },
+  { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: COL(3), y: ROW(10) },
+  { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(11) },
 
-  { id: "koncepcja_wody_deszczowej", label: "Koncepcja Zagospodarowania Wód Deszczowych- Rury Spustowe/Plansza Zlewni", x: COL(3), y: ROW(1) },
-  { id: "um_brnz_deszcz", label: "Umowy Branżowe- Deszczówka", x: COL(3), y: ROW(6) },
-  { id: "um_brnz_woda", label: "Umowy Branżowe- Woda", x: COL(3), y: ROW(7) },
-  { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: COL(3), y: ROW(8) },
-  { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(9) },
-
-  { id: "pzt", label: "PZT", x: COL(4), y: ROW(7.5)},
   { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
+  { id: "wt_woda_kan", label: "WT Woda Kan.", x: COL(4), y: ROW(2) },
+  { id: "wt_gaz", label: "WT Gaz", x: COL(4), y: ROW(3) },
+  { id: "umowa_przyl_co", label: "Umowa przył. C.O", x: COL(4), y: ROW(4) },
+  { id: "wt_trafo", label: "WT trafo", x: COL(4), y: ROW(5) },
+  { id: "umowa_przyl_nn", label: "Umowa przył. NN", x: COL(4), y: ROW(6) },
+  { id: "pzt", label: "PZT", x: COL(4), y: ROW(9)},
 
-  { id: "pozw_na_bud", label: "Pozwolenie na Budowę", x: COL(5), y: ROW(0)},
-  { id: "dane_do_kip", label: "Dane do KIP", x: COL(5), y: ROW(6) },
+  { id: "koncepcja_wody_deszczowej_big", label: "Koncepcja Zagospodarowania Wód Deszczowych- Rury Spustowe/Plansza Zlewni", x: COL(5), y: ROW(1) },
+  { id: "pozw_na_bud", label: "Pozwolenie na Budowę", x: COL(5), y: ROW(9)},
 
-  { id: "odbior1", label: "Odbiór pozwolenia na budowę", x: COL(6), y: ROW(0)},
-  { id: "kip", label: "Karta Informacyjna Przedsięwzięcia", x: COL(6), y: ROW(2)},
+  { id: "odbior1", label: "Odbiór pozwolenia na budowę", x: COL(6), y: ROW(9)},
+  //   Locate all downstream blocks somehow logically
   { id: "proj_lok_trafo", label: "Projekt Lokalizacji Trafo", x: COL(6), y: ROW(4)},
   { id: "pb_trafo", label: "PB Trafo", x: COL(6), y: ROW(6)},
   { id: "pt_trafo", label: "PT Trafo", x: COL(6), y: ROW(7)},
@@ -58,26 +60,34 @@ export const SHARED_BOXES = [
   { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zewnętrznej", x: COL(6), y: ROW(9)},
   { id: "proj_tech_wody", label: "Projekt Techniczny Przyłączy Wody/Kanalizacji", x: COL(6), y: ROW(10)},
   { id: "pt_odwodnienia", label: "P.T. Odwodnienia", x: COL(6), y: ROW(11)},
+  //   Also add those block to be nested inside {id: koncepcja_wody_deszczowej_big}
+  // { id: "koncepcja_mal_arch", label: "Koncepcja Małej Architektury", x: COL(?), y: ROW(?)},
+  // { id: "koncpecja_wod_deszcz", label: "Koncepcja Zagospodarowania Wód Deszczowych", x: COL(?), y: ROW(?)},
+  // { id: "koncepcja_drog", label: "Koncepcja Drogowa", x: COL(?), y: ROW(?)},
+  // { id: "koncepcja_zasil", label: "Konepcja Zasilania IS/CO/GAZ", x: COL(?), y: ROW(?)},
 
-  { id: "podklad_mal_arch", label: "Podkład Małej Architektury", x: COL(7), y: ROW(0)},
-  { id: "decyzja_srod", label: "Decyzja Środowiskowa", x: COL(7), y: ROW(2)},
+  { id: "dane_do_kip", label: "Dane do KIP", x: COL(7), y: ROW(1) },
+  { id: "podklad_mal_arch", label: "Podkład Małej Architektury", x: COL(7), y: ROW(9)},
   { id: "uzg_lok_trafo", label: "Uzgodnienie Lokalizacji Trafo", x: COL(7), y: ROW(4)},
   { id: "uzg_pb_pt_trafo", label: "Uzgodnienia PB", x: COL(7), y: ROW(6.5)},
   { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia", x: COL(7), y: ROW(9)},
   { id: "uzg_proj_tech_wody", label: "Uzgodnienia", x: COL(7), y: ROW(10)},
   { id: "zbiornik", label: "Zbiornik", x: COL(7), y: ROW(11)},
 
-  { id: "umowa_ziel", label: "Umowa Zieleń", x: COL(8), y: ROW(2)},
-  { id: "p_t_drogi", label: "P.T. Drogi", x: COL(8), y: ROW(3)},
-  { id: "proj_ośw_trn", label: "Projekt Oświetlenia Terenu", x: COL(8), y: ROW(4)},
+  { id: "kip", label: "Karta Informacyjna Przedsięwzięcia", x: COL(8), y: ROW(1)},
   { id: "operat", label: "Operat", x: COL(8), y: ROW(11)},
 
-  { id: "proj_ziel", label: "Projekt Zieleni", x: COL(9), y: ROW(6)},
-  { id: "pozw_wodnoprawne", label: "Pozowlenie Wodnoprawne", x: COL(9), y: ROW(11)},
+  { id: "decyzja_srod", label: "Decyzja Środowiskowa", x: COL(9), y: ROW(1)},
+  { id: "umowa_ziel", label: "Umowa Zieleń", x: COL(9), y: ROW(2)},
+  { id: "p_t_drogi", label: "P.T. Drogi", x: COL(9), y: ROW(3)},
+  { id: "proj_ośw_trn", label: "Projekt Oświetlenia Terenu", x: COL(9), y: ROW(4)},
 
-  { id: "proj_drg", label: "Projekt Wykonawczy Drogi", x: COL(10), y: ROW(6)},
-  { id: "proj_mal_arch", label: "Projekt Małej Architektury", x: COL(10), y: ROW(7)},
-  { id: "proj_ziel_final", label: "Projekt Zieleni", x: COL(10), y: ROW(8)},
+  { id: "proj_ziel", label: "Projekt Zieleni", x: COL(10), y: ROW(2)},
+  { id: "pozw_wodnoprawne", label: "Pozowlenie Wodnoprawne", x: COL(10), y: ROW(11)},
+
+  { id: "proj_drg", label: "Projekt Wykonawczy Drogi", x: COL(11), y: ROW(6)},
+  { id: "proj_mal_arch", label: "Projekt Małej Architektury", x: COL(11), y: ROW(7)},
+  { id: "proj_ziel_final", label: "Projekt Zieleni", x: COL(11), y: ROW(8)},
 ];
 
 // Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages.
