@@ -29,7 +29,7 @@ export const SHARED_BOXES = [
   // "Warunki usunięcia kolizji -> Projekt -> Uzgodnienia" chain
   { id: "war_usun_kolizji", label: "Warunki usunięcia kolizji", x: COL(2), y: ROW(0) },
   { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(3.5) },
-  { id: "pzt_podklad", label: "Projekt Zagospodarowania Terenu podkład", x: COL(2), y: ROW(7.5) },
+  { id: "pzt_podklad", label: "PZT podkład", x: COL(2), y: ROW(7.5) },
 
   { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
   { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: COL(3), y: ROW(2) },
@@ -43,7 +43,7 @@ export const SHARED_BOXES = [
   { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: COL(3), y: ROW(8) },
   { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(9) },
 
-  { id: "pzt", label: "Projekt Zagospodarowania Terenu", x: COL(4), y: ROW(7.5)},
+  { id: "pzt", label: "PZT", x: COL(4), y: ROW(7.5)},
   { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
 
   { id: "pozw_na_bud", label: "Pozwolenie na Budowę", x: COL(5), y: ROW(0)},
@@ -94,48 +94,46 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "woda", suffix: "Umowa Branżowa- woda kanalizacyjna CO", x: COL(5), y: ROW(1) },
   { id: "nn", suffix: "Umowa Branżowa- NN", x: COL(5), y: ROW(2) },
   { id: "konstrukcja", suffix: "Umowa Branżowa- konstrukcja", x: COL(5), y: ROW(3) },
+  { id: "uw", suffix: "Umowa Wnętrza", x: COL(5), y: ROW(5)},
 
+  { id: "pab_podklad", suffix: "Podkład do PAB", x: COL(6), y: ROW(-1.5) },
   { id: "pt_went", suffix: "PT wentylacji", x: COL(6), y: ROW(0) },
   { id: "pt_woda", suffix: "PT wody kan. CO", x: COL(6), y: ROW(1) },
   { id: "pt_elektryki", suffix: "PT elektryki", x: COL(6), y: ROW(2) },
   { id: "pt_konstr", suffix: "PT Konstrukcji", x: COL(6), y: ROW(3) },
-  { id: "pab_podklad", suffix: "Podkład do PAB", x: COL(6), y: ROW(4) },
+
+  { id: "koncepcja_wntrz", suffix: "Koncepcja Wnętrz", x: COL(6.5), y: ROW(5)},
 
   { id: "sprawdzenie_pt", suffix: "Sprawdzenie planów technicznych", x: COL(7), y: ROW(1.5) },
   { id: "pab", suffix: "Projekt Architektury Budynku", x: COL(7), y: ROW(-1.5) },
-  { id: "uw", suffix: "Umowa Wnętrza", x: COL(7), y: ROW(5)},
 
   { id: "pt_went_final", suffix: "PT wentylacji po sprawdzeniu", x: COL(8), y: ROW(0) },
   { id: "pt_woda_final", suffix: "PT wody kanalizacyjnej po sprawdzeniu", x: COL(8), y: ROW(1) },
   { id: "pt_elektryki_final", suffix: "PT elektryki po sprawdzeniu", x: COL(8), y: ROW(2) },
   { id: "pt_konstr_final", suffix: "PT Konstrukcji po sprawdzeniu", x: COL(8), y: ROW(3) },
-  { id: "koncepcja_wntrz", suffix: "Koncepcja Wnętrz", x: COL(8), y: ROW(5)},
+  { id: "podklad_el", suffix: "Podkład dla Elektryków", x: COL(8), y: ROW(5) },
 
-  { id: "podklad_el", suffix: "Podkład dla Elektryków", x: COL(9), y: ROW(5) },
+  { id: "odbior3", suffix: "Odbiór planu architektury budynku", x: COL(9), y: ROW(-1.5) },
 
-  // FIXED: was on the exact same column+row as odbior3 (COL(11), ROW(1.5)), so the two boxes fully overlapped and only one was ever visible/
-  // clickable. Moved to its own column, matching the edge order (pw_podkladow -> odbior3 implies pw_podkladow comes first).
-  { id: "odbior3", suffix: "Odbiór planu architektury budynku", x: COL(10), y: ROW(0) },
   { id: "pw_podkladow", suffix: "Plan wykonawczy podkładów", x: COL(10), y: ROW(1.5) },
 
-  { id: "pw_went", suffix: "Plan Wykonawczy Wnetylacji", x: COL(12), y: ROW(4) },
-  { id: "pw_woda", suffix: "Plan Wykonawczy Wody Kanalizacyjnej", x: COL(12), y: ROW(5) },
-  { id: "pw_konstr", suffix: "Plan Wykonawczy Konstrukcji", x: COL(12), y: ROW(6) },
-  { id: "pw_el", suffix: "Plan Wykonawczy Elektryki", x: COL(12), y: ROW(7) },
-  { id: "mat_ofert", suffix: "Materiały Ofertowe", x: COL(12), y: ROW(3) },
+  { id: "pw_went", suffix: "Plan Wykonawczy Wnetylacji", x: COL(11), y: ROW(4) },
+  { id: "pw_woda", suffix: "Plan Wykonawczy Wody Kanalizacyjnej", x: COL(11), y: ROW(5) },
+  { id: "pw_konstr", suffix: "Plan Wykonawczy Konstrukcji", x: COL(11), y: ROW(6) },
+  { id: "pw_el", suffix: "Plan Wykonawczy Elektryki", x: COL(11), y: ROW(7) },
 
-  { id: "sprawdzenie_pw", suffix: "Sprawdzenie planów wykonawczych", x: COL(13), y: ROW(5.5) },
+  { id: "sprawdzenie_pw", suffix: "Sprawdzenie planów wykonawczych", x: COL(12), y: ROW(5.5) },
 
-  { id: "pw_went_final", suffix: "Plan Wykonawczy Wnetylacji po sprawdzeniu", x: COL(14), y: ROW(4) },
-  { id: "pw_woda_final", suffix: "Plan Wykonawczy Wody Kanalizacyjnej po sprawdzeniu", x: COL(14), y: ROW(5) },
-  { id: "pw_konstr_final", suffix: "Plan Wykonawczy Konstrukcji po sprawdzeniu", x: COL(14), y: ROW(6) },
-  { id: "pw_el_final", suffix: "Plan Wykonawczy Elektryki po sprawdzeniu", x: COL(14), y: ROW(7) },
+  { id: "pw_went_final", suffix: "Plan Wykonawczy Wnetylacji po sprawdzeniu", x: COL(13), y: ROW(4) },
+  { id: "pw_woda_final", suffix: "Plan Wykonawczy Wody Kanalizacyjnej po sprawdzeniu", x: COL(13), y: ROW(5) },
+  { id: "pw_konstr_final", suffix: "Plan Wykonawczy Konstrukcji po sprawdzeniu", x: COL(13), y: ROW(6) },
+  { id: "pw_el_final", suffix: "Plan Wykonawczy Elektryki po sprawdzeniu", x: COL(13), y: ROW(7) },
 
-  // FIXED: was `label:` (silently produced `suffix: undefined` for this box - see chat for how that crashed the whole dashboard render).
-  { id: "proj_wntrz", suffix: "Projekt Wnętrz", x: COL(15), y: ROW(0)},
-  { id: "pw_archt_bud", suffix: "Plan Wykonawczy Architektury Budynku", x: COL(15), y: ROW(4) },
+  { id: "proj_wntrz", suffix: "Projekt Wnętrz", x: COL(14), y: ROW(0)},
+  { id: "mat_ofert", suffix: "Materiały Ofertowe", x: COL(14), y: ROW(1.5) },
+  { id: "pw_archt_bud", suffix: "Plan Wykonawczy Architektury Budynku", x: COL(14), y: ROW(3) },
 
-  { id: "mat_ofert_po_pw", suffix: "Materiały Ofertowe Po PW", x: COL(16), y: ROW(2) }
+  { id: "mat_ofert_po_pw", suffix: "Materiały Ofertowe Po PW", x: COL(15), y: ROW(1.5) }
 ];
 
 // Template edges among SHARED boxes and among BUILDING_BOX_TEMPLATE boxes.
@@ -162,47 +160,66 @@ export const EDGE_TEMPLATE = [
   ["pzt_podklad", "um_brnz_drogi"],
   ["pzt_podklad", "um_brnz_elektryka"],
 
+  ["um_brnz_deszcz", "pzt"],
+  ["um_brnz_woda", "pzt"],
+  ["um_brnz_drogi", "pzt"],
+  ["um_brnz_elektryka", "pzt"],
+
   ["koncepcja_arch", "odbior2"],
+
   ["odbior2", "wentylacje"],
   ["odbior2", "woda"],
   ["odbior2", "nn"],
   ["odbior2", "konstrukcja"],
   ["odbior2", "uw"],
+
   ["uw", "koncepcja_wntrz"],
+
   ["koncepcja_wntrz", "podklad_el"],
+
   ["podklad_el", "pw_el"],
+
   ["wentylacje", "pt_went"],
   ["woda", "pt_woda"],
   ["nn", "pt_elektryki"],
   ["konstrukcja", "pt_konstr"],
+
   ["pt_went", "sprawdzenie_pt"],
   ["pt_woda", "sprawdzenie_pt"],
   ["pt_elektryki", "sprawdzenie_pt"],
   ["pt_konstr", "sprawdzenie_pt"],
+
   ["sprawdzenie_pt", "pt_went_final"],
   ["sprawdzenie_pt", "pt_woda_final"],
   ["sprawdzenie_pt", "pt_elektryki_final"],
   ["sprawdzenie_pt", "pt_konstr_final"],
+
   ["pab_podklad", "pab"],
   ["pab", "odbior3"],
+
   ["pt_went_final", "pw_podkladow"],
   ["pt_woda_final", "pw_podkladow"],
   ["pt_elektryki_final", "pw_podkladow"],
   ["pt_konstr_final", "pw_podkladow"],
   ["odbior3", "pw_podkladow"],
+
   ["pw_podkladow", "pw_archt_bud"],
+
   ["pw_went", "sprawdzenie_pw"],
   ["pw_woda", "sprawdzenie_pw"],
   ["pw_konstr", "sprawdzenie_pw"],
   ["pw_el", "sprawdzenie_pw"],
+
   ["sprawdzenie_pw", "pw_went_final"],
   ["sprawdzenie_pw", "pw_woda_final"],
   ["sprawdzenie_pw", "pw_konstr_final"],
   ["sprawdzenie_pw", "pw_el_final"],
+
   ["pw_went_final", "pw_archt_bud"],
   ["pw_woda_final", "pw_archt_bud"],
   ["pw_konstr_final", "pw_archt_bud"],
   ["pw_el_final", "pw_archt_bud"],
+
   ["pw_archt_bud", "mat_ofert_po_pw"],
   ["mat_ofert", "mat_ofert_po_pw"],
   ["proj_wntrz", "mat_ofert_po_pw"]
