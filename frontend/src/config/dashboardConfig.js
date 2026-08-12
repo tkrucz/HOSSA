@@ -56,8 +56,8 @@ export const SHARED_BOXES = [
   { id: "pb_trafo", label: "PB Trafo", x: COL(6), y: ROW(4)},
   { id: "pt_trafo", label: "PT Trafo", x: COL(6), y: ROW(5)},
   { id: "proj_tech_wody", label: "Projekt Techniczny Przyłączy Wody/Kanalizacji", x: COL(6), y: ROW(6)},
-  { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zewnętrznej", x: COL(6), y: ROW(7)},
-  { id: "proj_tech_gaz_wew", label: "Projekt Techniczny Instalacji Gazowej Wewnętrznej", x: COL(6), y: ROW(8)},
+  { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zew.", x: COL(6), y: ROW(7)},
+  { id: "proj_tech_gaz_wew", label: "Projekt Techniczny Instalacji Gazowej Wew.", x: COL(6), y: ROW(8)},
   { id: "odbior3", label: "Odbiór pozwolenia na budowę", x: COL(6), y: ROW(9)},
 
   //   Also add those block to be nested inside {id: koncepcja_wody_deszczowej_big}
@@ -189,6 +189,17 @@ export const EDGE_TEMPLATE = [
 
   ["pzt", "pozw_na_bud"],
   ["pozw_na_bud", "odbior3"],
+  ["odbior3", "podklad_mal_arch"],
+
+  ["pt_odwodnienia", "zbiornik"],
+  ["zbiornik", "operat"],
+  ["operat", "pozw_wodnoprawne"],
+
+  ["pb_trafo", "uzg_pb_pt_trafo"],
+  ["pt_trafo", "uzg_pb_pt_trafo"],
+  ["proj_lok_trafo", "uzg_lok_trafo"],
+  ["proj_tech_wody", "uzg_proj_tech_wody"],
+  ["proj_tech_gaz_zew", "uzg_proj_tech_gaz_zew"],
 
   ["koncepcja_arch", "odbior1"],
 
@@ -203,6 +214,7 @@ export const EDGE_TEMPLATE = [
   ["koncepcja_wntrz", "podklad_el"],
 
   ["podklad_el", "pw_el"],
+  ["podklad_el", "proj_wntrz"],
 
   ["wentylacje", "pt_went"],
   ["woda", "pt_woda"],
