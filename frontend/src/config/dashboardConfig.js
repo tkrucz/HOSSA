@@ -46,52 +46,52 @@ export const SHARED_BOXES = [
   { id: "umowa_przyl_co", label: "Umowa przył. C.O", x: COL(4), y: ROW(4) },
   { id: "wt_trafo", label: "WT trafo", x: COL(4), y: ROW(5) },
   { id: "umowa_przyl_nn", label: "Umowa przył. NN", x: COL(4), y: ROW(6) },
-  { id: "pzt", label: "PZT", x: COL(4), y: ROW(9)},
+  { id: "pzt", label: "PZT", x: COL(4), y: ROW(9) },
 
   { id: "koncepcja_wody_deszczowej_big", label: "Koncepcja Zagospodarowania Wód Deszczowych- Rury Spustowe/Plansza Zlewni", x: COL(5), y: ROW(1) }, //too long name
-  { id: "pozw_na_bud", label: "Pozwolenie na Budowę", x: COL(5), y: ROW(9)},
+  { id: "pozw_na_bud", label: "Pozwolenie na Budowę", x: COL(5), y: ROW(9) },
 
-  { id: "pt_odwodnienia", label: "P.T. Odwodnienia", x: COL(6), y: ROW(0)},
-  { id: "proj_lok_trafo", label: "Projekt Lokalizacji Trafo", x: COL(6), y: ROW(2.5)},
-  { id: "pb_trafo", label: "PB Trafo", x: COL(6), y: ROW(4)},
-  { id: "pt_trafo", label: "PT Trafo", x: COL(6), y: ROW(5)},
-  { id: "proj_tech_wody", label: "Projekt Techniczny Przyłączy Wody/Kanalizacji", x: COL(6), y: ROW(6)},
-  { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zew.", x: COL(6), y: ROW(7)},
-  { id: "proj_tech_gaz_wew", label: "Projekt Techniczny Instalacji Gazowej Wew.", x: COL(6), y: ROW(8)},
-  { id: "odbior3", label: "Odbiór pozwolenia na budowę", x: COL(6), y: ROW(9)},
+  { id: "pt_odwodnienia", label: "P.T. Odwodnienia", x: COL(6), y: ROW(0) },
+  { id: "proj_lok_trafo", label: "Projekt Lokalizacji Trafo", x: COL(6), y: ROW(2.5) },
+  { id: "pb_trafo", label: "PB Trafo", x: COL(6), y: ROW(4) },
+  { id: "pt_trafo", label: "PT Trafo", x: COL(6), y: ROW(5) },
+  { id: "proj_tech_wody", label: "Projekt Techniczny Przyłączy Wody/Kanalizacji", x: COL(6), y: ROW(6) },
+  { id: "proj_tech_gaz_zew", label: "Projekt Techniczny Instalacji Gazowej Zew.", x: COL(6), y: ROW(7) },
+  { id: "proj_tech_gaz_wew", label: "Projekt Techniczny Instalacji Gazowej Wew.", x: COL(6), y: ROW(8) },
+  { id: "odbior3", label: "Odbiór pozwolenia na budowę", x: COL(6), y: ROW(9) },
 
-  //   Also add those block to be nested inside {id: koncepcja_wody_deszczowej_big}
-  // { id: "koncepcja_mal_arch", label: "Koncepcja Małej Architektury", x: COL(?), y: ROW(?)},
-  // { id: "koncpecja_wod_deszcz", label: "Koncepcja Zagospodarowania Wód Deszczowych", x: COL(?), y: ROW(?)},
-  // { id: "koncepcja_drog", label: "Koncepcja Drogowa", x: COL(?), y: ROW(?)},
-  // { id: "koncepcja_zasil", label: "Konepcja Zasilania IS/CO/GAZ", x: COL(?), y: ROW(?)},
+  //  !! Also add those block to be nested inside {id: koncepcja_wody_deszczowej_big} !!
+  // { id: "koncepcja_mal_arch", label: "Koncepcja Małej Architektury", x: COL(?), y: ROW(?) },
+  // { id: "koncpecja_wod_deszcz", label: "Koncepcja Zagospodarowania Wód Deszczowych", x: COL(?), y: ROW(?) },
+  // { id: "koncepcja_drog", label: "Koncepcja Drogowa", x: COL(?), y: ROW(?) },
+  // { id: "koncepcja_zasil", label: "Konepcja Zasilania IS/CO/GAZ", x: COL(?), y: ROW(?) },
 
-  { id: "zbiornik", label: "Zbiornik", x: COL(7), y: ROW(0)},
-  { id: "podklad_mal_arch", label: "Podkład Małej Architektury", x: COL(7), y: ROW(9)},
-  { id: "uzg_lok_trafo", label: "Uzgodnienie Lokalizacji Trafo", x: COL(7), y: ROW(2.5)},
-  { id: "uzg_pb_pt_trafo", label: "Uzgodnienia PB", x: COL(7), y: ROW(4.5)},
-  { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia", x: COL(7), y: ROW(6)},
-  { id: "uzg_proj_tech_wody", label: "Uzgodnienia", x: COL(7), y: ROW(7)},
+  { id: "zbiornik", label: "Zbiornik", x: COL(7), y: ROW(0) },
+  { id: "podklad_mal_arch", label: "Podkład Małej Architektury", x: COL(7), y: ROW(9) },
+  { id: "uzg_lok_trafo", label: "Uzgodnienie Lokalizacji Trafo", x: COL(7), y: ROW(2.5) },
+  { id: "uzg_pb_pt_trafo", label: "Uzgodnienia PB", x: COL(7), y: ROW(4.5) },
+  { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia", x: COL(7), y: ROW(6) },
+  { id: "uzg_proj_tech_wody", label: "Uzgodnienia", x: COL(7), y: ROW(7) },
 
-  { id: "operat", label: "Operat", x: COL(8), y: ROW(0)},
+  { id: "operat", label: "Operat", x: COL(8), y: ROW(0) },
 
-  { id: "pozw_wodnoprawne", label: "Pozowlenie Wodnoprawne", x: COL(9), y: ROW(0)},
+  { id: "pozw_wodnoprawne", label: "Pozowlenie Wodnoprawne", x: COL(9), y: ROW(0) },
   { id: "dane_do_kip", label: "Dane do KIP", x: COL(9), y: ROW(1) },
 
-  { id: "kip", label: "Karta Informacyjna Przedsięwzięcia", x: COL(10), y: ROW(1)},
+  { id: "kip", label: "Karta Informacyjna Przedsięwzięcia", x: COL(10), y: ROW(1) },
 
-  { id: "decyzja_srod", label: "Decyzja Środowiskowa", x: COL(11), y: ROW(1)},
-  { id: "umowa_ziel", label: "Umowa Zieleń", x: COL(11), y: ROW(2)},
-  { id: "p_t_drogi", label: "P.T. Drogi", x: COL(11), y: ROW(3)},
-  { id: "proj_osw_trn", label: "Projekt Oświetlenia Terenu", x: COL(11), y: ROW(4)},
+  { id: "decyzja_srod", label: "Decyzja Środowiskowa", x: COL(11), y: ROW(1) },
+  { id: "umowa_ziel", label: "Umowa Zieleń", x: COL(11), y: ROW(2) },
+  { id: "p_t_drogi", label: "P.T. Drogi", x: COL(11), y: ROW(3) },
+  { id: "proj_osw_trn", label: "Projekt Oświetlenia Terenu", x: COL(11), y: ROW(4) },
 
-  { id: "proj_ziel", label: "Projekt Zieleni", x: COL(12), y: ROW(2)},
+  { id: "proj_ziel", label: "Projekt Zieleni", x: COL(12), y: ROW(2) },
 
   { id: "sprawdzenie_pt_proj_ziel", label: "Sprawdzenie", x: COL(13), y: ROW(3) },
 
-  { id: "proj_drg", label: "Projekt Wykonawczy Drogi", x: COL(14), y: ROW(6)},
-  { id: "proj_mal_arch", label: "Projekt Małej Architektury", x: COL(14), y: ROW(7)},
-  { id: "proj_ziel_final", label: "Projekt Zieleni", x: COL(14), y: ROW(8)},
+  { id: "proj_drg", label: "Projekt Wykonawczy Drogi", x: COL(14), y: ROW(6) },
+  { id: "proj_mal_arch", label: "Projekt Małej Architektury", x: COL(14), y: ROW(7) },
+  { id: "proj_ziel_final", label: "Projekt Zieleni", x: COL(14), y: ROW(8) },
 ];
 
 // Per-building template. `x` is the stage column - shared across all buildings, since every building goes through the same process stages.
@@ -108,7 +108,7 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "woda", suffix: "Umowa Branżowa- woda kanalizacyjna CO", x: COL(5), y: ROW(1) },
   { id: "nn", suffix: "Umowa Branżowa- NN", x: COL(5), y: ROW(2) },
   { id: "konstrukcja", suffix: "Umowa Branżowa- konstrukcja", x: COL(5), y: ROW(3) },
-  { id: "uw", suffix: "Umowa Wnętrza", x: COL(5), y: ROW(5)},
+  { id: "uw", suffix: "Umowa Wnętrza", x: COL(5), y: ROW(5) },
 
   { id: "pab_podklad", suffix: "Podkład do PAB", x: COL(6), y: ROW(-1.5) },
   { id: "pt_went", suffix: "PT wentylacji", x: COL(6), y: ROW(0) },
@@ -116,7 +116,7 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "pt_elektryki", suffix: "PT elektryki", x: COL(6), y: ROW(2) },
   { id: "pt_konstr", suffix: "PT Konstrukcji", x: COL(6), y: ROW(3) },
 
-  { id: "koncepcja_wntrz", suffix: "Koncepcja Wnętrz", x: COL(6.5), y: ROW(5)},
+  { id: "koncepcja_wntrz", suffix: "Koncepcja Wnętrz", x: COL(6.5), y: ROW(5) },
 
   { id: "sprawdzenie_pt", suffix: "Sprawdzenie planów technicznych", x: COL(7), y: ROW(1.5) },
   { id: "pab", suffix: "Projekt Architektury Budynku", x: COL(7), y: ROW(-1.5) },
@@ -143,7 +143,7 @@ export const BUILDING_BOX_TEMPLATE = [
   { id: "pw_konstr_final", suffix: "Plan Wykonawczy Konstrukcji po sprawdzeniu", x: COL(13), y: ROW(6) },
   { id: "pw_el_final", suffix: "Plan Wykonawczy Elektryki po sprawdzeniu", x: COL(13), y: ROW(7) },
 
-  { id: "proj_wntrz", suffix: "Projekt Wnętrz", x: COL(14), y: ROW(0)},
+  { id: "proj_wntrz", suffix: "Projekt Wnętrz", x: COL(14), y: ROW(0) },
   { id: "mat_ofert", suffix: "Materiały Ofertowe", x: COL(14), y: ROW(1.5) },
   { id: "pw_archt_bud", suffix: "Plan Wykonawczy Architektury Budynku", x: COL(14), y: ROW(3) },
 

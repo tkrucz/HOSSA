@@ -16,8 +16,9 @@ import {
 
 const DEFAULT_COLOR = "9E9D9B"; // "brak" - no matching document found
 
-// True if `name` starts with `suffix` AND the next character (if any) isn't a letter/digit -
-// so "Geodezja (Robocza)" and "Geodezja - X" both count as matching "Geodezja", but "GeodezjaAnnex" does not.
+// True if `name` starts with `suffix` AND the next character (if any) isn't
+// a letter/digit - so "Geodezja (Robocza)" and "Geodezja - X" both count as
+// matching "Geodezja", but "GeodezjaAnnex" does not.
 const WORD_CHAR = /[a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/;
 function isPrefixMatch(name, suffix) {
   if (!name.startsWith(suffix)) return false;
@@ -25,8 +26,9 @@ function isPrefixMatch(name, suffix) {
   return nextChar === "" || !WORD_CHAR.test(nextChar);
 }
 
-// When several documents match one box, this decides which status "wins" for the box's fill color -
-// most-needs-attention first, so a single problem document isn't hidden behind others that are further along.
+// When several documents match one box, this decides which status "wins"
+// for the box's fill color - most-needs-attention first, so a single
+// problem document isn't hidden behind others that are further along.
 const STATUS_PRIORITY = [
   "wymaga zmian",
   "w trakcie przygotowania",
@@ -47,8 +49,10 @@ function pickRepresentative(matches) {
 }
 
 function wrapLabel(label) {
-  // Guards against a config entry with a missing suffix/label (e.g. a BUILDING_BOX_TEMPLATE item that used `label:` instead of `suffix:`)
-  // - shows a visible placeholder on that one box instead of throwing and blanking the entire dashboard.
+  // Guards against a config entry with a missing suffix/label (e.g. a
+  // BUILDING_BOX_TEMPLATE item that used `label:` instead of `suffix:`) -
+  // shows a visible placeholder on that one box instead of throwing and
+  // blanking the entire dashboard.
   if (!label) return ["(brak nazwy)"];
 
   const words = label.split(" ");
@@ -73,6 +77,8 @@ export default function DashboardPage() {
   const { projectId } = useParams();
   const { token } = useAuth();
   const [docs, setDocs] = useState([]);
+  const [markers, setMarkers] = useState([]);
+  const [statuses, setStatuses] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [pickerDocs, setPickerDocs] = useState(null);
 
@@ -83,11 +89,52 @@ export default function DashboardPage() {
       .catch(console.error);
   };
 
-  useEffect(loadDocs, [projectId]);
+  const loadMarkers = () => {
+    fetch(`${API_URL}/projects/${projectId}/not-applicable-markers`)
+      .then((res) => res.json())
+      .then(setMarkers)
+      .catch(console.error);
+  };
 
-  // Assigns every document to the SHARED_BOXES entry whose label is the LONGEST matching prefix of its name -
-  // same idea as docsByBoxId below, but for boxes that aren't scoped to a building/folder
-  // (e.g. "Plan Zagospodarowania Terenu" and "Plan Zagospodarowania Terenu Konserwator" both resolve to the same box instead of the second one being invisible).
+  useEffect(() => {
+    fetch(`${API_URL}/statuses`)
+      .then((res) => res.json())
+      .then(setStatuses)
+      .catch(console.error);
+  }, []);
+
+  // Derived live from the DB's `status` table, not hardcoded - so if the
+  // color is ever changed there (as with the legend), markers stay in sync
+  // automatically instead of drifting out of sync like the old hardcoded
+  // value did.
+  const notApplicableColor =
+    statuses.find((s) => s.name === "nie dotyczy")?.color || "9E9D9B";
+
+  const loadAll = () => {
+    loadDocs();
+    loadMarkers();
+  };
+
+  useEffect(loadAll, [projectId]);
+
+  // Quick lookup: is this (folder, stage name) marked "nie dotyczy"?
+  const markerSet = useMemo(() => {
+    const set = new Set();
+    markers.forEach((m) => set.add(`${m.folder || ""}::${m.stage_name}`));
+    return set;
+  }, [markers]);
+
+  const isMarkedNotApplicable = (box) => {
+    const stageName = box.suffix || box.label;
+    return markerSet.has(`${box.building || ""}::${stageName}`);
+  };
+
+  // Assigns every document to the SHARED_BOXES entry whose label is the
+  // LONGEST matching prefix of its name - same idea as docsByBoxId below,
+  // but for boxes that aren't scoped to a building/folder (e.g.
+  // "Plan Zagospodarowania Terenu" and "Plan Zagospodarowania Terenu
+  // Konserwator" both resolve to the same box instead of the second one
+  // being invisible).
   const docsBySharedBoxId = useMemo(() => {
     const map = {};
 
@@ -110,8 +157,9 @@ export default function DashboardPage() {
     return map;
   }, [docs]);
 
-  // Buildings are discovered from folder names present in the project's documents (see discoverBuildings() in dashboardConfig.js)
-  // - the graph is generated to fit exactly that many, growing or shrinking with data.
+  // Buildings are discovered from folder names present in the project's
+  // documents (see discoverBuildings() in dashboardConfig.js) - the graph
+  // is generated to fit exactly that many, growing or shrinking with data.
   const buildings = useMemo(() => discoverBuildings(docs), [docs]);
 
   const { boxes, edges } = useMemo(
@@ -127,9 +175,11 @@ export default function DashboardPage() {
     return map;
   }, [boxes]);
 
-  // Assigns every document (within a building's folder) to the box whose stage suffix is the LONGEST matching prefix of its name
-  // - so "PT wentylacji po sprawdzeniu ..." goes to that box specifically, rather than also matching the shorter "PT wentylacji" box.
-  // Computed once for the whole project rather than independently per box.
+  // Assigns every document (within a building's folder) to the box whose
+  // stage suffix is the LONGEST matching prefix of its name - so
+  // "PT wentylacji po sprawdzeniu ..." goes to that box specifically,
+  // rather than also matching the shorter "PT wentylacji" box. Computed
+  // once for the whole project rather than independently per box.
   const docsByBoxId = useMemo(() => {
     const map = {};
 
@@ -155,7 +205,8 @@ export default function DashboardPage() {
     return map;
   }, [docs]);
 
-  // For a per-building box, use the building assignment above; for a shared box, use the shared assignment above.
+  // For a per-building box, use the building assignment above; for a
+  // shared box, use the shared assignment above.
   const matchesFor = (box) => {
     if (box.isAnchor) return [];
     if (box.building) return docsByBoxId[box.id] || [];
@@ -170,22 +221,22 @@ export default function DashboardPage() {
     }
   };
 
-  // Marks an otherwise-empty ("brak") box as "nie dotyczy" by creating a
-  // placeholder document with no real file behind it - see the checkbox
-  // rendered on unmatched boxes below.
+  // Marks an otherwise-empty ("brak") box as "nie dotyczy" - no documents
+  // row is created, just a lightweight marker (see backend/main.py). Sync
+  // will auto-clear this the moment a real matching file gets scanned.
   const handleMarkNotApplicable = (box) => {
-    const label = box.suffix || box.label;
+    const stageName = box.suffix || box.label;
 
-    if (!window.confirm(`Oznaczyć "${label}" jako "nie dotyczy"?`)) return;
+    if (!window.confirm(`Oznaczyć "${stageName}" jako "nie dotyczy"?`)) return;
 
-    fetch(`${API_URL}/projects/${projectId}/documents/placeholder`, {
+    fetch(`${API_URL}/projects/${projectId}/not-applicable-markers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...authHeaders(token),
       },
       body: JSON.stringify({
-        name: label,
+        stage_name: stageName,
         folder: box.building || null,
       }),
     })
@@ -193,10 +244,37 @@ export default function DashboardPage() {
         if (!res.ok) throw new Error();
         return res.json();
       })
-      .then(() => loadDocs())
+      .then(() => loadMarkers())
       .catch(() =>
         alert('Nie udało się oznaczyć jako "nie dotyczy". Czy jesteś zalogowany?')
       );
+  };
+
+  // Undoes a "nie dotyczy" marking. This is the ONLY interaction available
+  // on a marked box - there's no real document behind it, so there's
+  // nothing to open a status-editing modal for.
+  const handleUnmarkNotApplicable = (box) => {
+    const stageName = box.suffix || box.label;
+
+    if (!window.confirm(`Cofnąć oznaczenie "nie dotyczy" dla "${stageName}"?`)) return;
+
+    fetch(`${API_URL}/projects/${projectId}/not-applicable-markers`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(token),
+      },
+      body: JSON.stringify({
+        stage_name: stageName,
+        folder: box.building || null,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(() => loadMarkers())
+      .catch(() => alert("Nie udało się cofnąć oznaczenia."));
   };
 
   const canvasWidth =
@@ -255,16 +333,27 @@ export default function DashboardPage() {
 
           {boxes.map((box) => {
             const matches = matchesFor(box);
+            const markedNA = !box.isAnchor && matches.length === 0 && isMarkedNotApplicable(box);
             const representative = pickRepresentative(matches);
-            const color = representative ? representative.color : DEFAULT_COLOR;
+            const color = markedNA
+              ? notApplicableColor
+              : representative
+              ? representative.color
+              : DEFAULT_COLOR;
             const lines = wrapLabel(box.label);
-            const clickable = matches.length > 0;
+            const clickable = matches.length > 0 || markedNA;
+
+            const handleClick = markedNA
+              ? () => handleUnmarkNotApplicable(box)
+              : matches.length > 0
+              ? () => handleBoxClick(matches)
+              : undefined;
 
             return (
               <g
                 key={box.id}
                 transform={`translate(${box.x}, ${box.y})`}
-                onClick={clickable ? () => handleBoxClick(matches) : undefined}
+                onClick={handleClick}
                 className={
                   box.isAnchor
                     ? "dashboard-box anchor"
@@ -300,7 +389,7 @@ export default function DashboardPage() {
                     {matches.length}
                   </text>
                 )}
-                {!box.isAnchor && matches.length === 0 && (
+                {!box.isAnchor && matches.length === 0 && !markedNA && (
                   <g
                     className="dashboard-box-na"
                     transform="translate(6, 6)"
@@ -366,7 +455,7 @@ export default function DashboardPage() {
       <DocumentModal
         documentId={selectedId}
         onClose={() => setSelectedId(null)}
-        onSaved={loadDocs}
+        onSaved={loadAll}
       />
     </div>
   );

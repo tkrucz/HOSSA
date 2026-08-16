@@ -95,6 +95,27 @@ CREATE TABLE document_versions (
 
 CREATE INDEX idx_document_versions_document_id ON document_versions(document_id);
 
+CREATE TABLE not_applicable_markers (
+    marker_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id TEXT NOT NULL,
+    -- '' (empty string, not NULL) for shared/project-level boxes - Postgres
+    -- treats every NULL as distinct for UNIQUE purposes, which would let
+    -- the same shared box be marked twice. Using '' keeps the constraint
+    -- meaningful for both cases.
+    folder TEXT NOT NULL DEFAULT '',
+    stage_name TEXT NOT NULL,
+    user_id SMALLINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_not_applicable_markers_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id),
+    CONSTRAINT uq_not_applicable_markers_scope
+        UNIQUE (project_id, folder, stage_name)
+);
+
+CREATE INDEX idx_not_applicable_markers_project ON not_applicable_markers(project_id);
+
 CREATE OR REPLACE FUNCTION set_modification_dt()
     RETURNS TRIGGER AS $$
     BEGIN

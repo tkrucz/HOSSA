@@ -10,8 +10,9 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from backend.config import PATH_SEP
 from backend.database import SessionLocal
-from backend.models import Document, Status, DocumentVersion, User
+from backend.models import Document, Status, DocumentVersion, User, NotApplicableMarker
 from backend.sync import sync_documents
 from backend.auth import (
     hash_password,
@@ -19,10 +20,6 @@ from backend.auth import (
     create_access_token,
     get_current_user,
 )
-
-# relative_path values are stored as Windows-style paths, e.g.
-# "Projekt 1\Podkatalog 1\Dokument 11.pdf" - split on backslash, not "/"
-PATH_SEP = "\\"
 
 app = FastAPI()
 
@@ -188,66 +185,85 @@ def get_project_documents(project_id: str, db: Session = Depends(get_db)):
     ]
 
 
-class MarkNotApplicableRequest(BaseModel):
-    name: str
+class NotApplicableRequest(BaseModel):
+    stage_name: str
     folder: str | None = None  # building name for per-building boxes; omit for shared boxes
 
 
-# Creates (or updates, if it already exists) a placeholder document row with
-# no real file behind it, set to status "nie dotyczy". This lets a stage box
-# on the dashboard be explicitly marked "doesn't apply here" even when
-# nothing has ever been scanned for it - without this, a box with zero
-# matching documents can never leave the "brak" (grey) state.
-@app.post("/projects/{project_id}/documents/placeholder")
+# Returns every "nie dotyczy" marker for a project - lightweight scope
+# tuples, not fake documents. The dashboard uses this to color otherwise-
+# empty boxes purple without those boxes going through the folder browser,
+# stale-cleanup, or the normal document edit flow at all.
+@app.get("/projects/{project_id}/not-applicable-markers")
+def get_not_applicable_markers(project_id: str, db: Session = Depends(get_db)):
+    markers = (
+        db.query(NotApplicableMarker)
+        .filter(NotApplicableMarker.project_id == project_id)
+        .all()
+    )
+
+    return [
+        {"folder": m.folder or None, "stage_name": m.stage_name}
+        for m in markers
+    ]
+
+
+# Marks a stage as "nie dotyczy" without creating any documents row - no
+# fake relative_path, so it never shows up in the folder browser and never
+# gets deleted by sync's stale-document cleanup. Cleared automatically (see
+# sync.py) the moment a real matching file actually gets scanned.
+@app.post("/projects/{project_id}/not-applicable-markers")
 def mark_not_applicable(
     project_id: str,
-    payload: MarkNotApplicableRequest,
+    payload: NotApplicableRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    not_applicable = db.query(Status).filter(Status.status == "nie dotyczy").first()
-    if not_applicable is None:
-        raise HTTPException(
-            status_code=500, detail="Status 'nie dotyczy' nie istnieje w bazie"
+    folder = payload.folder or ""
+
+    existing = (
+        db.query(NotApplicableMarker)
+        .filter(
+            NotApplicableMarker.project_id == project_id,
+            NotApplicableMarker.folder == folder,
+            NotApplicableMarker.stage_name == payload.stage_name,
         )
+        .first()
+    )
+    if existing is not None:
+        return {"folder": payload.folder, "stage_name": payload.stage_name}
 
-    if payload.folder:
-        relative_path = f"{project_id}{PATH_SEP}{payload.folder}{PATH_SEP}{payload.name}"
-    else:
-        relative_path = f"{project_id}{PATH_SEP}{payload.name}"
-
-    doc = db.query(Document).filter(Document.relative_path == relative_path).first()
-
-    if doc is None:
-        doc = Document(
-            document_id=uuid4(),
-            doc_name=payload.name,
-            relative_path=relative_path,
-            status_id=not_applicable.status_id,
-            zatwierdzone=0,
-            user_id=current_user.user_id,
-        )
-        db.add(doc)
-    else:
-        # Already exists (either a real synced file at this exact path, or
-        # this placeholder was created before) - just re-mark it.
-        doc.status_id = not_applicable.status_id
-        doc.zatwierdzone = 0
-        doc.user_id = current_user.user_id
-
+    marker = NotApplicableMarker(
+        marker_id=uuid4(),
+        project_id=project_id,
+        folder=folder,
+        stage_name=payload.stage_name,
+        user_id=current_user.user_id,
+    )
+    db.add(marker)
     db.commit()
-    db.refresh(doc)
 
-    return {
-        "id": str(doc.document_id),
-        "name": doc.doc_name,
-        "folder": payload.folder,
-        "extension": doc.extension_,
-        "status": doc.status.status,
-        "color": doc.status.color,
-        "size": doc.size_,
-        "modified_at": doc.data_zmiany_dokumentu.isoformat() if doc.data_zmiany_dokumentu else None,
-    }
+    return {"folder": payload.folder, "stage_name": payload.stage_name}
+
+
+# Undoes a "nie dotyczy" marking (e.g. it was set by mistake).
+@app.delete("/projects/{project_id}/not-applicable-markers")
+def unmark_not_applicable(
+    project_id: str,
+    payload: NotApplicableRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    folder = payload.folder or ""
+
+    db.query(NotApplicableMarker).filter(
+        NotApplicableMarker.project_id == project_id,
+        NotApplicableMarker.folder == folder,
+        NotApplicableMarker.stage_name == payload.stage_name,
+    ).delete()
+    db.commit()
+
+    return {"unmarked": True}
 
 
 # NOTE: nested under /projects/{project_id}/... rather than the flat

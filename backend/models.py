@@ -69,3 +69,16 @@ class DocumentVersion(Base):
 
     status = relationship("Status")
     user = relationship("User")
+
+
+class NotApplicableMarker(Base):
+    __tablename__ = "not_applicable_markers"
+
+    marker_id = Column(UUID, primary_key=True)
+    project_id = Column(String)
+    folder = Column(String)  # '' for shared/project-level boxes, never NULL
+    stage_name = Column(String)
+    user_id = Column(Integer, ForeignKey("users.user_id"))
+    created_at = Column(DateTime)
+
+    user = relationship("User")
