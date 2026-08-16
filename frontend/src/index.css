@@ -116,6 +116,21 @@ h1 {
   fill: #eff6ff;
 }
 
+.dashboard-box-warning {
+  cursor: pointer;
+}
+
+.dashboard-box-warning-icon {
+  font-size: 12px;
+  font-weight: 800;
+  fill: #fff;
+  pointer-events: none;
+}
+
+.dashboard-box-warning:hover circle {
+  fill: #b91c1c;
+}
+
 .picker-modal {
   max-width: 380px;
 }

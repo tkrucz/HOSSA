@@ -28,7 +28,7 @@ export const SHARED_BOXES = [
 
   { id: "war_usun_kolizji", label: "Warunki usunięcia kolizji", x: COL(2), y: ROW(0) },
   { id: "dane_do_war", label: "Dane do warunków", x: COL(2), y: ROW(3.5) },
-  { id: "pzt_podklad", label: "PZT podkład", x: COL(2), y: ROW(9) },
+  { id: "pzt_podklad", label: "PZT Podkład", x: COL(2), y: ROW(9) },
 
   { id: "proj_war_usun_kolizji", label: "Projekt", x: COL(3), y: ROW(0) },
   { id: "dane_do_war_woda", label: "Dane do Warunków Woda", x: COL(3), y: ROW(2) },

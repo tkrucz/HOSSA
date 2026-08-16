@@ -221,6 +221,32 @@ export default function DashboardPage() {
     }
   };
 
+  // Reverse of the edge graph: box id -> its direct parent box ids.
+  const parentsOf = useMemo(() => {
+    const map = {};
+    edges.forEach(([from, to]) => {
+      (map[to] ||= []).push(from);
+    });
+    return map;
+  }, [edges]);
+
+  // A box is "satisfied" (as a predecessor) if it either has a real
+  // matching document, or is explicitly marked "nie dotyczy" - either way,
+  // nothing further is expected from it before its dependents show up.
+  const isSatisfied = (box) => {
+    if (!box || box.isAnchor) return true;
+    return matchesFor(box).length > 0 || isMarkedNotApplicable(box);
+  };
+
+  // True if this box has a real document but at least one of its DIRECT
+  // predecessors doesn't (and isn't marked N/A either) - i.e. this file
+  // showed up before something it depends on.
+  const hasMissingPredecessor = (box) => {
+    if (box.isAnchor) return false;
+    const parentIds = parentsOf[box.id] || [];
+    return parentIds.some((pid) => !isSatisfied(boxesById[pid]));
+  };
+
   // Given a box id, returns every box id reachable via outgoing edges in
   // the ALREADY-EXPANDED (per-building) graph - i.e. everything that
   // depends on it, directly or transitively. Used to cascade a "nie
@@ -397,6 +423,8 @@ export default function DashboardPage() {
           {boxes.map((box) => {
             const matches = matchesFor(box);
             const markedNA = !box.isAnchor && matches.length === 0 && isMarkedNotApplicable(box);
+            const missingPredecessor =
+              !box.isAnchor && matches.length > 0 && hasMissingPredecessor(box);
             const representative = pickRepresentative(matches);
             const color = markedNA
               ? notApplicableColor
@@ -434,6 +462,26 @@ export default function DashboardPage() {
                   strokeWidth={box.isAnchor ? "2" : "1"}
                   strokeOpacity={box.isAnchor ? "0.6" : "0.15"}
                 />
+                {missingPredecessor && (
+                  <g
+                    className="dashboard-box-warning"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert("Ten dokument wymaga dodania poprzedzających dokumentów");
+                    }}
+                  >
+                    <title>Brakuje poprzedzającego dokumentu</title>
+                    <circle cx="10" cy="10" r="9" fill="#dc2626" />
+                    <text
+                      x="10"
+                      y="14"
+                      textAnchor="middle"
+                      className="dashboard-box-warning-icon"
+                    >
+                      !
+                    </text>
+                  </g>
+                )}
                 {!box.isAnchor && matches.length > 1 && (
                   <circle
                     cx={BOX_WIDTH - 10}

@@ -8,10 +8,8 @@ from synchronizer.repository import DocumentRepository
 
 
 def sync_documents(folder: str = DOCUMENTS_FOLDER) -> dict:
-    """Scans `folder` for documents, inserts/updates them in the database,
-    removes DB records for files that no longer exist on disk, and resolves
-    any "nie dotyczy" markers whose stage now has a real matching document.
-
+    """Scans `folder` for documents, inserts/updates them in the database, removes DB records for files that no longer exist on disk,
+    and resolves any "nie dotyczy" markers whose stage now has a real matching document.
     Returns a dict with the counts of scanned/removed/resolved documents.
     """
     loader = DataLoader(folder)
@@ -56,14 +54,25 @@ def _remove_stale_documents(scanned_paths: set[str]) -> int:
         session.close()
 
 
+def _is_prefix_match(name: str, suffix: str) -> bool:
+    """Mirrors the frontend's isPrefixMatch: `name` counts as matching 'suffix' if it starts with it  AND the next
+     character (if any) isn't a letter/digit - so "Geodezja - Konserwator" matches "Geodezja" but "GeodezjaAnnex" does not.
+    """
+    if not name.startswith(suffix):
+        return False
+    next_index = len(suffix)
+    if next_index >= len(name):
+        return True
+    return not name[next_index].isalnum()
+
+
 def _resolve_not_applicable_markers() -> int:
-    """For every "nie dotyczy" marker, checks whether a real document now
-    exists at that exact (project, folder, stage_name) scope. If so: the
-    marker is deleted and that document's status is bumped straight to
-    "w trakcie przygotowania" (skipping "brak" entirely - a marker existing
-    means someone was already expecting this file to show up), but only if
-    it's still at the default "brak" status, so a status a human already
-    set manually is never overwritten.
+    """For every "nie dotyczy" marker, checks whether a real document now exists at that (project, folder, stage_name)
+    scope - matched the same way the dashboard matches documents to boxes (prefix + word boundary,
+    not exact equality), so e.g. "Geodezja - Konserwator" correctly resolves a "Geodezja" marker instead of leaving it as an orphan.
+    If a match is found: the marker is deleted and that document's status is bumped straight to "w trakcie przygotowania"
+     (skipping "brak" entirely - a marker existing means someone was already expecting this file to show up),
+     but only if it's still at the default "brak" status, so a status a human already set manually is never overwritten.
     """
     session = SessionLocal()
 
@@ -82,9 +91,15 @@ def _resolve_not_applicable_markers() -> int:
         resolved = 0
 
         for marker in markers:
+            escaped = (
+                marker.stage_name.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+            )
+
             query = session.query(Document).filter(
                 func.split_part(Document.relative_path, PATH_SEP, 1) == marker.project_id,
-                Document.doc_name == marker.stage_name,
+                Document.doc_name.like(f"{escaped}%", escape="\\"),
             )
 
             if marker.folder:
@@ -92,7 +107,11 @@ def _resolve_not_applicable_markers() -> int:
                     func.split_part(Document.relative_path, PATH_SEP, 2) == marker.folder
                 )
 
-            doc = query.first()
+            candidates = query.all()
+            doc = next(
+                (d for d in candidates if _is_prefix_match(d.doc_name, marker.stage_name)),
+                None,
+            )
 
             if doc is None:
                 continue
