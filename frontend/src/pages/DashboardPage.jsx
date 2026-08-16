@@ -221,14 +221,32 @@ export default function DashboardPage() {
     }
   };
 
-  // Marks an otherwise-empty ("brak") box as "nie dotyczy" - no documents
-  // row is created, just a lightweight marker (see backend/main.py). Sync
-  // will auto-clear this the moment a real matching file gets scanned.
-  const handleMarkNotApplicable = (box) => {
-    const stageName = box.suffix || box.label;
+  // Given a box id, returns every box id reachable via outgoing edges in
+  // the ALREADY-EXPANDED (per-building) graph - i.e. everything that
+  // depends on it, directly or transitively. Used to cascade a "nie
+  // dotyczy" marking downstream.
+  const getDescendantIds = (startId) => {
+    const adjacency = {};
+    edges.forEach(([from, to]) => {
+      (adjacency[from] ||= []).push(to);
+    });
 
-    if (!window.confirm(`Oznaczyć "${stageName}" jako "nie dotyczy"?`)) return;
+    const visited = new Set();
+    const queue = [...(adjacency[startId] || [])];
 
+    while (queue.length) {
+      const id = queue.shift();
+      if (visited.has(id)) continue;
+      visited.add(id);
+      (adjacency[id] || []).forEach((next) => {
+        if (!visited.has(next)) queue.push(next);
+      });
+    }
+
+    return visited;
+  };
+
+  const postMarker = (targetBox) =>
     fetch(`${API_URL}/projects/${projectId}/not-applicable-markers`, {
       method: "POST",
       headers: {
@@ -236,28 +254,47 @@ export default function DashboardPage() {
         ...authHeaders(token),
       },
       body: JSON.stringify({
-        stage_name: stageName,
-        folder: box.building || null,
+        stage_name: targetBox.suffix || targetBox.label,
+        folder: targetBox.building || null,
       }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
+    });
+
+  // Marks an otherwise-empty ("brak") box as "nie dotyczy" - no documents
+  // row is created, just a lightweight marker (see backend/main.py). Sync
+  // will auto-clear this the moment a real matching file gets scanned.
+  //
+  // Cascades: every box downstream of this one (per EDGE_TEMPLATE, already
+  // expanded per building) that currently has NO matching document also
+  // gets marked - "this doesn't apply" implies nothing that depends on it
+  // applies either. A downstream box that already has real document(s) is
+  // left alone, so this never silently overwrites actual progress.
+  const handleMarkNotApplicable = (box) => {
+    const stageName = box.suffix || box.label;
+
+    if (
+      !window.confirm(
+        `Oznaczyć "${stageName}" (i wszystkie zależne od niej, jeszcze puste etapy) jako "nie dotyczy"?`
+      )
+    )
+      return;
+
+    const descendantBoxes = Array.from(getDescendantIds(box.id))
+      .map((id) => boxesById[id])
+      .filter((b) => b && !b.isAnchor && matchesFor(b).length === 0);
+
+    const targets = [box, ...descendantBoxes];
+
+    Promise.all(targets.map(postMarker))
+      .then((responses) => {
+        if (responses.some((res) => !res.ok)) throw new Error();
+        return loadMarkers();
       })
-      .then(() => loadMarkers())
       .catch(() =>
         alert('Nie udało się oznaczyć jako "nie dotyczy". Czy jesteś zalogowany?')
       );
   };
 
-  // Undoes a "nie dotyczy" marking. This is the ONLY interaction available
-  // on a marked box - there's no real document behind it, so there's
-  // nothing to open a status-editing modal for.
-  const handleUnmarkNotApplicable = (box) => {
-    const stageName = box.suffix || box.label;
-
-    if (!window.confirm(`Cofnąć oznaczenie "nie dotyczy" dla "${stageName}"?`)) return;
-
+  const deleteMarker = (targetBox) =>
     fetch(`${API_URL}/projects/${projectId}/not-applicable-markers`, {
       method: "DELETE",
       headers: {
@@ -265,15 +302,41 @@ export default function DashboardPage() {
         ...authHeaders(token),
       },
       body: JSON.stringify({
-        stage_name: stageName,
-        folder: box.building || null,
+        stage_name: targetBox.suffix || targetBox.label,
+        folder: targetBox.building || null,
       }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
+    });
+
+  // Undoes a "nie dotyczy" marking. This is the ONLY interaction available
+  // on a marked box - there's no real document behind it, so there's
+  // nothing to open a status-editing modal for.
+  //
+  // Cascades: every box downstream of this one that's currently marked
+  // "nie dotyczy" gets unmarked too - the mirror image of the mark-side
+  // cascade. Descendants that already have real documents (and so were
+  // never cascaded onto in the first place) aren't touched, since there's
+  // no marker on them to remove.
+  const handleUnmarkNotApplicable = (box) => {
+    const stageName = box.suffix || box.label;
+
+    if (
+      !window.confirm(
+        `Cofnąć oznaczenie "nie dotyczy" dla "${stageName}" (i wszystkich zależnych, oznaczonych etapów)?`
+      )
+    )
+      return;
+
+    const descendantBoxes = Array.from(getDescendantIds(box.id))
+      .map((id) => boxesById[id])
+      .filter((b) => b && !b.isAnchor && isMarkedNotApplicable(b));
+
+    const targets = [box, ...descendantBoxes];
+
+    Promise.all(targets.map(deleteMarker))
+      .then((responses) => {
+        if (responses.some((res) => !res.ok)) throw new Error();
+        return loadMarkers();
       })
-      .then(() => loadMarkers())
       .catch(() => alert("Nie udało się cofnąć oznaczenia."));
   };
 

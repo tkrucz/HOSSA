@@ -40,7 +40,7 @@ export const SHARED_BOXES = [
   { id: "um_brnz_drogi", label: "Umowy Branżowe- Drogi", x: COL(3), y: ROW(10) },
   { id: "um_brnz_elektryka", label: "Umowy Branżowe- Elektryka", x: COL(3), y: ROW(11) },
 
-  { id: "uzg_war_usun_kolizji", label: "Uzgodnienia", x: COL(4), y: ROW(0) },
+  { id: "uzg_war_usun_kolizji", label: "Uzgodnienia Warunków Usunięcia Kolizji", x: COL(4), y: ROW(0) },
   { id: "wt_woda_kan", label: "WT Woda Kan.", x: COL(4), y: ROW(2) },
   { id: "wt_gaz", label: "WT Gaz", x: COL(4), y: ROW(3) },
   { id: "umowa_przyl_co", label: "Umowa przył. C.O", x: COL(4), y: ROW(4) },
@@ -70,8 +70,8 @@ export const SHARED_BOXES = [
   { id: "podklad_mal_arch", label: "Podkład Małej Architektury", x: COL(7), y: ROW(9) },
   { id: "uzg_lok_trafo", label: "Uzgodnienie Lokalizacji Trafo", x: COL(7), y: ROW(2.5) },
   { id: "uzg_pb_pt_trafo", label: "Uzgodnienia PB", x: COL(7), y: ROW(4.5) },
-  { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia", x: COL(7), y: ROW(6) },
-  { id: "uzg_proj_tech_wody", label: "Uzgodnienia", x: COL(7), y: ROW(7) },
+  { id: "uzg_proj_tech_wody", label: "Uzgodnienia Wody", x: COL(7), y: ROW(6) },
+  { id: "uzg_proj_tech_gaz_zew", label: "Uzgodnienia Gazu", x: COL(7), y: ROW(7) },
 
   { id: "operat", label: "Operat", x: COL(8), y: ROW(0) },
 
