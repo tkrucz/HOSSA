@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
+import ReloadButton from "../components/ReloadButton";
 import { API_URL } from "../api";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const fetchProjects = useCallback(() => {
@@ -20,42 +19,12 @@ export default function ProjectsPage() {
     fetchProjects();
   }, [fetchProjects]);
 
-  const handleReload = () => {
-    setSyncing(true);
-    setError(null);
-
-    fetch(`${API_URL}/sync`, { method: "POST" })
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.detail || `Błąd serwera (${res.status})`);
-        }
-        return res.json();
-      })
-      .then(() => fetchProjects())
-      .catch((err) =>
-        setError(
-          `Nie udało się załadować dokumentów ponownie: ${err.message}`
-        )
-      )
-      .finally(() => setSyncing(false));
-  };
-
   return (
     <div className="page">
       <div className="page-header">
         <h1>Projekty</h1>
-
-        <button
-          className="reload-button"
-          onClick={handleReload}
-          disabled={syncing}
-        >
-          {syncing ? "Ładowanie…" : "Załaduj ponownie"}
-        </button>
+        <ReloadButton onSynced={fetchProjects} />
       </div>
-
-      {error && <p className="modal-error">{error}</p>}
 
       <div className="card-grid">
         {projects.map((project) => (

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import DocumentCard from "../components/DocumentCard";
 import DocumentModal from "../components/DocumentModal";
+import ReloadButton from "../components/ReloadButton";
 import { API_URL } from "../api";
 import { STATUS_LEGEND } from "../statusLegend";
 
@@ -10,12 +11,16 @@ export default function DocumentsPage() {
   const [docs, setDocs] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
 
-  useEffect(() => {
-    fetch(`${API_URL}/projects/${projectId}/folders/${folderId}/documents`)
+  const fetchDocs = useCallback(() => {
+    return fetch(`${API_URL}/projects/${projectId}/folders/${folderId}/documents`)
       .then((res) => res.json())
       .then(setDocs)
       .catch(console.error);
   }, [projectId, folderId]);
+
+  useEffect(() => {
+    fetchDocs();
+  }, [fetchDocs]);
 
   const handleSaved = (updated) => {
     setDocs((prev) =>
@@ -33,9 +38,12 @@ export default function DocumentsPage() {
         {folderId}
       </div>
 
-      <h1>
-        {projectId} / {folderId} - Dokumenty
-      </h1>
+      <div className="page-header">
+        <h1>
+          {projectId} / {folderId} - Dokumenty
+        </h1>
+        <ReloadButton onSynced={fetchDocs} />
+      </div>
 
       <div className="doc-grid">
         {docs.map((doc) => (

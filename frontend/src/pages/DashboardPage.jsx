@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import DocumentModal from "../components/DocumentModal";
 import DocumentPickerModal from "../components/DocumentPickerModal";
+import ReloadButton from "../components/ReloadButton";
 import { API_URL } from "../api";
 import { useAuth, authHeaders } from "../authContext";
 import { STATUS_LEGEND } from "../statusLegend";
@@ -380,11 +381,14 @@ export default function DashboardPage() {
       <div className="page-header">
         <h1>{projectId} - Dashboard</h1>
 
-        <div className="view-tabs">
-          <Link to={`/projects/${projectId}/folders`} className="view-tab">
-            Widok folderów
-          </Link>
-          <span className="view-tab view-tab-active">Dashboard</span>
+        <div className="page-header-actions">
+          <div className="view-tabs">
+            <Link to={`/projects/${projectId}/folders`} className="view-tab">
+              Widok folderów
+            </Link>
+            <span className="view-tab view-tab-active">Dashboard</span>
+          </div>
+          <ReloadButton onSynced={loadAll} />
         </div>
       </div>
 
