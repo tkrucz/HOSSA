@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import DocumentModal from "../components/DocumentModal";
 import DocumentPickerModal from "../components/DocumentPickerModal";
@@ -175,6 +175,87 @@ export default function DashboardPage() {
     });
     return map;
   }, [boxes]);
+
+  const canvasWidth =
+    (boxes.length ? Math.max(...boxes.map((b) => b.x)) : 0) + BOX_WIDTH + 40;
+  const canvasHeight =
+    (boxes.length ? Math.max(...boxes.map((b) => b.y)) : 0) + BOX_HEIGHT + 40;
+
+  // Click-and-drag pan + zoom, replacing scrollbar-based navigation.
+  const ZOOM_STEP = 0.20;
+  const MIN_ZOOM = 0.2;
+  const MAX_ZOOM = 2;
+
+  const viewportRef = useRef(null);
+  const dragRef = useRef(null); // { startX, startY, startPanX, startPanY, moved }
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  const zoomBy = (delta) => {
+    setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z + delta)));
+  };
+
+  const zoomToFit = () => {
+    const el = viewportRef.current;
+    if (!el || !canvasWidth || !canvasHeight) return;
+
+    const fit = Math.min(
+      el.clientWidth / canvasWidth,
+      el.clientHeight / canvasHeight,
+      1
+    );
+    setZoom(fit > 0 ? fit : 1);
+    setPan({ x: 20, y: 20 });
+  };
+
+  // Auto-fit the very first time the diagram's size is known (and whenever
+  // the number of buildings changes the overall size), so the whole
+  // diagram is visible by default instead of opening zoomed to 100%.
+  useEffect(() => {
+    zoomToFit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasWidth, canvasHeight]);
+
+  const handleMouseDown = (e) => {
+    // Only the left mouse button starts a drag.
+    if (e.button !== 0) return;
+
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startPanX: pan.x,
+      startPanY: pan.y,
+      moved: false,
+    };
+    setIsDragging(true);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.moved = true;
+
+      setPan({ x: drag.startPanX + dx, y: drag.startPanY + dy });
+    };
+
+    const handleMouseUp = () => setIsDragging(false);
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
 
   // Assigns every document (within a building's folder) to the box whose
   // stage suffix is the LONGEST matching prefix of its name - so
@@ -367,11 +448,6 @@ export default function DashboardPage() {
       .catch(() => alert("Nie udało się cofnąć oznaczenia."));
   };
 
-  const canvasWidth =
-    (boxes.length ? Math.max(...boxes.map((b) => b.x)) : 0) + BOX_WIDTH + 40;
-  const canvasHeight =
-    (boxes.length ? Math.max(...boxes.map((b) => b.y)) : 0) + BOX_HEIGHT + 40;
-
   return (
     <div className="page dashboard-page">
       <div className="breadcrumb">
@@ -399,13 +475,36 @@ export default function DashboardPage() {
         </p>
       )}
 
-      <div className="dashboard-scroll">
+      <div className="dashboard-viewport" ref={viewportRef}>
+        <div className="dashboard-zoom-controls">
+          <button type="button" onClick={() => zoomBy(-ZOOM_STEP)} title="Oddal">
+            −
+          </button>
+          <span className="dashboard-zoom-level">{Math.round(zoom * 100)}%</span>
+          <button type="button" onClick={() => zoomBy(ZOOM_STEP)} title="Przybliż">
+            +
+          </button>
+          <button type="button" onClick={zoomToFit} title="Dopasuj do okna">
+            Dopasuj
+          </button>
+        </div>
+
         <svg
           className="dashboard-svg"
-          viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-          width={canvasWidth}
-          height={canvasHeight}
+          width="100%"
+          height="100%"
+          onMouseDown={handleMouseDown}
+          onClickCapture={(e) => {
+            // Suppress the click that follows a drag, so releasing the
+            // mouse after panning doesn't also open whatever box you
+            // happened to let go over.
+            if (dragRef.current?.moved) {
+              e.stopPropagation();
+            }
+          }}
+          style={{ cursor: isDragging ? "grabbing" : "grab" }}
         >
+          <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
           {edges.map(([fromId, toId]) => {
             const from = boxesById[fromId];
             const to = boxesById[toId];
@@ -543,6 +642,7 @@ export default function DashboardPage() {
               </g>
             );
           })}
+          </g>
         </svg>
       </div>
 
