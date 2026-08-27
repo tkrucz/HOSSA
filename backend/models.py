@@ -39,7 +39,12 @@ class Document(Base):
     absolute_path = Column(String)
     relative_path = Column(String)
     size_ = Column(BigInteger)
-    data_utworzenia_dokumentu = Column(Date)
+    # NOTE: despite the name, this stores a full timestamp
+    # ('YYYY-MM-DD HH:MM:SS' from document.created in synchronizer/document.py),
+    # not a bare date. Under Postgres this worked anyway because Postgres
+    # implicitly casts a timestamp string to DATE on insert; SQLite does no
+    # such casting, so the column type has to actually match the data.
+    data_utworzenia_dokumentu = Column(DateTime)
     data_zmiany_dokumentu = Column(DateTime)
     hash = Column(String)
     source_ = Column(String)
