@@ -2,10 +2,13 @@ import os
 import subprocess
 import sys
 from datetime import date
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -446,3 +449,36 @@ def update_document(
         if doc.data_modyfikacji_statusu_dokumentu
         else None,
     }
+
+
+# --- Serve the built frontend (standalone app) -----------------------------
+# Everything below MUST stay at the very bottom of this file. Starlette
+# matches routes in registration order, so a catch-all defined any earlier
+# would shadow real API endpoints above it.
+#
+# This entire block is a no-op during normal dev work (`npm run dev` on its
+# own port + `uvicorn --reload` here, talking over CORS) - it only
+# activates once `frontend/dist/` actually exists, i.e. after someone runs
+# `npm run build`. That's what makes this the standalone build: one
+# process, one port, no separate frontend server needed at all.
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+if FRONTEND_DIST.is_dir():
+    # Vite's hashed JS/CSS bundles live under dist/assets/ - served as-is.
+    app.mount(
+        "/assets",
+        StaticFiles(directory=FRONTEND_DIST / "assets"),
+        name="frontend-assets",
+    )
+
+    @app.get("/{full_path:path}")
+    def serve_frontend(full_path: str):
+        # A real file at this path (favicon.ico, robots.txt, etc.) gets
+        # served directly. Anything else - including every client-side
+        # route like /projects/Projekt%201/folders - falls back to
+        # index.html so React Router can take over and render it.
+        candidate = FRONTEND_DIST / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+
+        return FileResponse(FRONTEND_DIST / "index.html")
