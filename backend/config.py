@@ -20,9 +20,11 @@ def _require(name: str, default: str | None = None) -> str:
 # "Projekt 1\Podkatalog 1\Dokument 11.pdf" - split on backslash, not "/".
 PATH_SEP = "\\"
 
-# Where the filesystem sync job scans for documents. In this standalone
-# build this will eventually come from a folder-picker in the app itself
-# rather than a .env file - see the roadmap notes in DEPLOY_STANDALONE.md.
+# Where the filesystem sync job scans for documents. In the standalone
+# build (backend/launcher.py) this comes from a native folder-picker and
+# gets set via os.environ before this module is ever imported. When
+# running the normal dev workflow (`uvicorn backend.main:app --reload`
+# directly), it still comes from your .env file as before.
 DOCUMENTS_FOLDER = _require("DOCUMENTS_FOLDER")
 
 # SQLite database file. Defaults to a file named hossa.sqlite3 next to

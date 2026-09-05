@@ -237,7 +237,7 @@ def mark_not_applicable(
         return {"folder": payload.folder, "stage_name": payload.stage_name}
 
     marker = NotApplicableMarker(
-        marker_id=uuid4(),
+        marker_id=str(uuid4()),
         project_id=project_id,
         folder=folder,
         stage_name=payload.stage_name,
