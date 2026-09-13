@@ -276,6 +276,46 @@ export const EDGE_TEMPLATE = [
 
 const REPEATABLE_IDS = new Set(BUILDING_BOX_TEMPLATE.map((t) => t.id));
 
+// Turns a `from`/`to` box pair into an SVG path `d` string that only ever
+// moves horizontally or vertically - the "elbow connector" look of a normal
+// flowchart (and of the hand-drawn diagram this dashboard is based on),
+// instead of a straight diagonal line cutting across unrelated boxes.
+//
+// Forward edges (target column at or to the right of the source) bend at
+// the midpoint between the two columns. Because every box in a column sits
+// at the same `x`, all edges crossing the same column gap share that same
+// bend `x` - they naturally line up on one vertical "trunk" the way parallel
+// lines do in the reference sketch, without any extra bookkeeping.
+//
+// Backward/feedback edges (target column to the left, e.g. a decision that
+// loops back upstream) can't use that trick without cutting through
+// whatever sits between the two columns, so instead they drop out of the
+// bottom of the source box, run along a lane below both boxes, and come
+// back up into the bottom of the target box.
+export function edgePath(from, to) {
+  const x1 = from.x + BOX_WIDTH;
+  const y1 = from.y + BOX_HEIGHT / 2;
+  const x2 = to.x;
+  const y2 = to.y + BOX_HEIGHT / 2;
+
+  if (x2 < x1) {
+    const loopY =
+      Math.max(from.y + BOX_HEIGHT, to.y + BOX_HEIGHT) + ROW_GAP / 2;
+    const xA = from.x + BOX_WIDTH / 2;
+    const xB = to.x + BOX_WIDTH / 2;
+    return `M ${xA} ${from.y + BOX_HEIGHT} L ${xA} ${loopY} L ${xB} ${loopY} L ${xB} ${
+      to.y + BOX_HEIGHT
+    }`;
+  }
+
+  if (y1 === y2) {
+    return `M ${x1} ${y1} L ${x2} ${y2}`;
+  }
+
+  const midX = x1 + (x2 - x1) / 2;
+  return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+}
+
 // Buildings are just the folder names present in this project's documents
 // (e.g. a file under "Projekt 1\Budynek A\..." belongs to building
 // "Budynek A") - the same `folder` value the regular folder-browsing view

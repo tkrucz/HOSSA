@@ -13,6 +13,7 @@ import {
   BUILDING_BOX_TEMPLATE,
   discoverBuildings,
   buildDashboardGraph,
+  edgePath,
 } from "../config/dashboardConfig";
 
 const DEFAULT_COLOR = "9E9D9B"; // "brak" - no matching document found
@@ -511,14 +512,13 @@ export default function DashboardPage() {
             if (!from || !to) return null;
 
             return (
-              <line
+              <path
                 key={`${fromId}-${toId}`}
-                x1={from.x + BOX_WIDTH}
-                y1={from.y + BOX_HEIGHT / 2}
-                x2={to.x}
-                y2={to.y + BOX_HEIGHT / 2}
+                d={edgePath(from, to)}
+                fill="none"
                 stroke="#9ca3af"
                 strokeWidth="1.5"
+                strokeLinecap="round"
               />
             );
           })}
