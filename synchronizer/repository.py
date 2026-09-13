@@ -1,3 +1,5 @@
+import uuid
+
 from synchronizer.document import Document
 
 # When a document already exists and is re-synced (i.e. the file is still there), its status auto-advances from "brak" to "w trakcie przygotowania".
@@ -10,7 +12,7 @@ AUTO_ADVANCE_TO = "w trakcie przygotowania"
 SYSTEM_USER_LOGIN = "system"
 
 
-# Handles persistence of scanned documents into the PostgreSQL database.
+# Handles persistence of scanned documents into the SQLite database.
 class DocumentRepository:
 
     def __init__(self, database):
@@ -20,7 +22,7 @@ class DocumentRepository:
     def _get_system_user_id(self):
         cursor = self.connection.cursor()
         cursor.execute(
-            "SELECT user_id FROM users WHERE login = %s", (SYSTEM_USER_LOGIN,)
+            "SELECT user_id FROM users WHERE login = ?", (SYSTEM_USER_LOGIN,)
         )
         row = cursor.fetchone()
         cursor.close()
@@ -28,7 +30,7 @@ class DocumentRepository:
         if row is None:
             raise RuntimeError(
                 f"No user with login '{SYSTEM_USER_LOGIN}' found - run the "
-                "users seed insert from the DDL before syncing."
+                "users seed insert from the schema before syncing."
             )
 
         return row[0]
@@ -37,9 +39,17 @@ class DocumentRepository:
 
         cursor = self.connection.cursor()
 
+        # SQLite has no gen_random_uuid() server-side default (unlike
+        # Postgres) - this id is only actually used if this turns out to be
+        # a brand-new row; on conflict/update it's simply discarded, since
+        # `document_id` is never part of the ON CONFLICT ... DO UPDATE SET
+        # list below (an existing row's own id is never overwritten).
+        new_document_id = str(uuid.uuid4())
+
         query = """
         INSERT INTO documents
         (
+            document_id,
             doc_name,
             extension_,
             absolute_path,
@@ -54,20 +64,20 @@ class DocumentRepository:
 
         VALUES
         (
-            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+            ?,?,?,?,?,?,?,?,?,?,?
         )
 
         ON CONFLICT(relative_path)
         DO UPDATE SET
 
-        hash = EXCLUDED.hash,
-        size_ = EXCLUDED.size_,
-        data_utworzenia_dokumentu = EXCLUDED.data_utworzenia_dokumentu,
-        data_zmiany_dokumentu = EXCLUDED.data_zmiany_dokumentu,
-        source_ = EXCLUDED.source_,
+        hash = excluded.hash,
+        size_ = excluded.size_,
+        data_utworzenia_dokumentu = excluded.data_utworzenia_dokumentu,
+        data_zmiany_dokumentu = excluded.data_zmiany_dokumentu,
+        source_ = excluded.source_,
         status_id = CASE
-            WHEN documents.status_id = (SELECT status_id FROM status WHERE status = %s)
-            THEN (SELECT status_id FROM status WHERE status = %s)
+            WHEN documents.status_id = (SELECT status_id FROM status WHERE status = ?)
+            THEN (SELECT status_id FROM status WHERE status = ?)
             ELSE documents.status_id
         END
         """
@@ -81,6 +91,7 @@ class DocumentRepository:
         cursor.execute(
             query,
             (
+                new_document_id,
                 document.name,
                 document.extension,
                 document.absolute_path,
