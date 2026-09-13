@@ -6,22 +6,21 @@ import sys
 import threading
 import time
 import tkinter as tk
+import traceback
 import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
 import uvicorn
 
-# HOSSA project root (this file lives in backend/, so parent.parent is the
-# root - matches where db/schema_sqlite.sql lives).
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from backend.paths import PROJECT_ROOT, resource_path
 
 # Running this file directly (`python backend/launcher.py`) puts backend/'s
 # own folder on sys.path, NOT the project root - so uvicorn.run() below
-# would fail to resolve "backend.main:app" without this. Doing it
-# explicitly here means it works the same way regardless of how this
-# script gets invoked (direct, `-m`, or eventually a frozen executable).
-if str(PROJECT_ROOT) not in sys.path:
+# would fail to resolve "backend.main:app" without this. Not needed when
+# frozen - PyInstaller's bundle already makes `backend` importable on its
+# own.
+if not getattr(sys, "frozen", False) and str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
@@ -74,10 +73,7 @@ def ensure_database(db_path: Path) -> None:
     if db_path.exists():
         return
 
-    # TODO(step 4 - PyInstaller): once bundled, this needs to resolve
-    # against sys._MEIPASS instead of PROJECT_ROOT, since the schema file
-    # has to be bundled as a data file and unpacked to a temp location.
-    schema_path = PROJECT_ROOT / "db" / "schema_sqlite.sql"
+    schema_path = resource_path("db/schema_sqlite.sql")
 
     if not schema_path.is_file():
         raise FileNotFoundError(f"Nie znaleziono schematu bazy danych: {schema_path}")
@@ -153,41 +149,80 @@ def open_browser_when_ready():
 
 def main():
     app_dir = get_app_data_dir()
+    print(f"[HOSSA] App data dir: {app_dir}")
     settings = load_settings(app_dir)
 
     documents_folder = pick_documents_folder(settings.get("documents_folder"))
     if not documents_folder:
-        # Window closed without picking anything on first run - nothing
-        # sensible to do but exit quietly.
+        print("[HOSSA] No folder chosen - exiting.")
         return
 
+    print(f"[HOSSA] Documents folder: {documents_folder}")
     settings["documents_folder"] = documents_folder
     save_settings(app_dir, settings)
 
     jwt_secret = ensure_jwt_secret(app_dir, settings)
     db_path = app_dir / "hossa.sqlite3"
+    print(f"[HOSSA] Database path: {db_path}")
 
     try:
         ensure_database(db_path)
-    except Exception as exc:
-        messagebox.showerror("HOSSA", f"Nie udało się przygotować bazy danych:\n{exc}")
+        print("[HOSSA] Database ready.")
+    except Exception:
+        traceback.print_exc()
+        messagebox.showerror(
+            "HOSSA", f"Nie udało się przygotować bazy danych:\n{traceback.format_exc()}"
+        )
         return
 
-    # backend/config.py reads these via os.environ - setting them here,
-    # before backend.main ever gets imported (which only happens once
-    # uvicorn.run() below resolves the "backend.main:app" string), means no
-    # .env file is needed at all for this build.
     os.environ["DOCUMENTS_FOLDER"] = documents_folder
     os.environ["JWT_SECRET_KEY"] = jwt_secret
     os.environ["DATABASE_PATH"] = str(db_path)
 
+    print(f"[HOSSA] FRONTEND_DIST resolves to: {resource_path('frontend/dist')}")
+    print(f"[HOSSA] index.html exists: {(resource_path('frontend/dist') / 'index.html').is_file()}")
+
     threading.Thread(target=open_browser_when_ready, daemon=True).start()
 
+    print("[HOSSA] Starting uvicorn on http://127.0.0.1:8000 ...")
     try:
-        uvicorn.run("backend.main:app", host="127.0.0.1", port=8000)
-    except Exception as exc:
-        messagebox.showerror("HOSSA", f"Nie udało się uruchomić aplikacji:\n{exc}")
+        # Importing the app object directly (rather than passing the
+        # string "backend.main:app" for uvicorn to resolve dynamically at
+        # runtime) is deliberate: PyInstaller's bundler works by statically
+        # tracing real `import` statements to decide what to include.
+        # uvicorn's string-based app loading uses importlib.import_module()
+        # at runtime instead, which PyInstaller can't see through - so
+        # backend.main (and everything it imports: FastAPI, SQLAlchemy,
+        # this app's own config/database/models/sync/auth modules) never
+        # actually got bundled, causing "Could not import module
+        # backend.main" despite the module clearly being right there in
+        # this project. A normal import fixes that; the tradeoff is that
+        # uvicorn's --reload flag needs a string reference to work, but
+        # reload is meaningless for a frozen executable anyway.
+        from backend.main import app as fastapi_app
+
+        uvicorn.run(
+            fastapi_app,
+            host="127.0.0.1",
+            port=8000,
+            log_config=None,
+        )
+    except Exception:
+        traceback.print_exc()
+        messagebox.showerror(
+            "HOSSA", f"Nie udało się uruchomić aplikacji:\n{traceback.format_exc()}"
+        )
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        # With console=False in the PyInstaller build, there's no terminal
+        # for a traceback to print to - anything uncaught here would
+        # otherwise just vanish, leaving someone staring at nothing with no
+        # idea what happened.
+        try:
+            messagebox.showerror("HOSSA", f"Nieoczekiwany błąd:\n{exc}")
+        except Exception:
+            pass

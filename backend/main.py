@@ -461,7 +461,9 @@ def update_document(
 # activates once `frontend/dist/` actually exists, i.e. after someone runs
 # `npm run build`. That's what makes this the standalone build: one
 # process, one port, no separate frontend server needed at all.
-FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+from backend.paths import resource_path
+
+FRONTEND_DIST = resource_path("frontend/dist")
 
 if FRONTEND_DIST.is_dir():
     # Vite's hashed JS/CSS bundles live under dist/assets/ - served as-is.
